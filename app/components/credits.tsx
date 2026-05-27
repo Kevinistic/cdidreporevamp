@@ -1,6 +1,6 @@
 "use client";
 
-import { SquareArrowOutUpRight } from "lucide-react";
+import { SquareArrowOutUpRight, ScrollText, Code, CodeXml, Lightbulb } from "lucide-react";
 
 type CreditsProps = {
 	onBack: () => void;
@@ -42,7 +42,10 @@ export function Credits({ onBack }: CreditsProps) {
 				</button>
 
 				<div className="flex h-full flex-col gap-4 overflow-y-auto p-6 pt-16 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-600">
-					<p className="text-xs uppercase tracking-[0.2em] text-gray-400">Credits</p>
+					<p className="text-xs uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
+                        <ScrollText size={16} className="inline-block"/>
+                        Credits
+                    </p>
 
 					<CreditsButton 
                         title="CDID" 
@@ -50,7 +53,10 @@ export function Credits({ onBack }: CreditsProps) {
                         label="CDID Roblox Page" 
                         href="https://www.roblox.com/games/6911148748/Car-Driving-Indonesia" />
 
-					<p className="text-xs uppercase tracking-[0.2em] text-gray-400">Built with</p>
+					<p className="text-xs uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
+                        <CodeXml size={16} className="inline-block"/>
+                        Built with
+                    </p>
 
 					<div className="flex max-w-full flex-col gap-2">
 						<CreditsButton title="Next.js" desc="The React Framework for Production" label="Next.js" href="https://nextjs.org/" />
@@ -60,7 +66,10 @@ export function Credits({ onBack }: CreditsProps) {
 						<CreditsButton title="Lucide Icons" desc="A collection of free, open-source icons" label="Lucide Icons" href="https://lucide.dev/" />
 					</div>
 
-                    <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Developer</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
+                        <Lightbulb size={16} className="inline-block"/>
+                        Developer
+                    </p>
 
 					<div className="flex max-w-full flex-col gap-2">
                         <CreditsButton title="aoderu" desc="Design & Development" label="aoderu" href="https://guns.lol/aoderu" />

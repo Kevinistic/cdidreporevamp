@@ -279,19 +279,28 @@ export function SidebarFilters({
       const gamepassCol = findColumn(["gamepass"]);
 
       if (dealershipCol) {
-        const vals = Array.from(new Set(rows.map((r) => r[dealershipCol]).filter(Boolean))).map((v) => ({ label: String(v), value: String(v) }));
+        const vals = Array.from(new Set(rows.map((r) => r[dealershipCol]).filter(Boolean)))
+          .map((v) => ({ label: String(v), value: String(v) }))
+          .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+
         setDealershipOptions(vals);
         setDealershipValues(vals.map((o) => o.value));
       }
 
       if (limitedCol) {
-        const vals = Array.from(new Set(rows.map((r) => r[limitedCol]).filter(Boolean))).map((v) => ({ label: String(v), value: String(v) }));
+        const vals = Array.from(new Set(rows.map((r) => r[limitedCol]).filter(Boolean)))
+          .map((v) => ({ label: String(v), value: String(v) }))
+          .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+
         setLimitedOptions(vals);
         setLimitedValues(vals.map((o) => o.value));
       }
 
       if (gamepassCol) {
-        const vals = Array.from(new Set(rows.map((r) => r[gamepassCol]).filter(Boolean))).map((v) => ({ label: String(v), value: String(v) }));
+        const vals = Array.from(new Set(rows.map((r) => r[gamepassCol]).filter(Boolean)))
+          .map((v) => ({ label: String(v), value: String(v) }))
+          .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+
         setGamepassOptions(vals);
         setGamepassValues(vals.map((o) => o.value));
       }

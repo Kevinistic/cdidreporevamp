@@ -2,7 +2,7 @@
 
 import { SidebarFilters } from "./components/sidebar-filters-panel";
 import { CardsGrid, type CardItem } from "./components/cards-grid";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Filters } from "./components/sidebar-filters";
 import { TextAlignJustify, ScrollText } from 'lucide-react';
 import { Pagination } from "./components/pagination-bar";
@@ -10,6 +10,7 @@ import { MainCard } from "./components/maincard";
 import { Credits } from "./components/credits";
 
 export default function Home() {
+  const pageStartRef = useRef(performance.now());
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<Filters | undefined>(undefined);
@@ -17,6 +18,7 @@ export default function Home() {
   const [totalItems, setTotalItems] = useState(0);
   const [selectedCard, setSelectedCard] = useState<CardItem | null>(null);
   const [isCreditsVisible, setIsCreditsVisible] = useState(false);
+  const [buildSeconds, setBuildSeconds] = useState<number | null>(null);
 
   const pageSize = 40;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -31,6 +33,13 @@ export default function Home() {
     }
   }, [currentPage, totalPages]);
 
+  useEffect(() => {
+    if (buildSeconds === null && totalItems > 0) {
+      const elapsedSeconds = (performance.now() - pageStartRef.current) / 1000;
+      setBuildSeconds(Number(elapsedSeconds.toFixed(3)));
+    }
+  }, [buildSeconds, totalItems]);
+
   return (
     <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
       <aside
@@ -38,7 +47,7 @@ export default function Home() {
           isSidebarVisible ? "translate-x-0" : "-translate-x-full pointer-events-none"
         }`}
       >
-        <div className="w-full">
+        <div className="flex h-full w-full flex-col">
           <span className="text-xs uppercase tracking-[0.2em]">CDID Car Database (Unofficial)</span>
 
           {/* search bar */}
@@ -52,7 +61,7 @@ export default function Home() {
             />
           </div>
 
-          <SidebarFilters onChange={(f) => setFilters(f)} />
+          <SidebarFilters onChange={(f) => setFilters(f)} carCount={totalItems} buildSeconds={buildSeconds ?? 0} />
         </div>
       </aside>
       <main

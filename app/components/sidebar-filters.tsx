@@ -190,7 +190,11 @@ function buildPriceDropdown(label: string) {
   return { label };
 }
 
-export function SidebarFilters({ onChange }: { onChange?: (filters: Filters) => void }) {
+export function SidebarFilters({
+  onChange,
+  carCount = 0,
+  buildSeconds = 0,
+}: { onChange?: (filters: Filters) => void; carCount?: number; buildSeconds?: number }) {
   const [activeSection, setActiveSection] = useState<SectionKey>("limiteds");
 
   const [limitedOptions, setLimitedOptions] = useState<DropdownOption[]>([]);
@@ -387,7 +391,7 @@ export function SidebarFilters({ onChange }: { onChange?: (filters: Filters) => 
   }, [limitedValues, gamepassValues, dealershipValues, priceRange, sortByValue, otherValues, newCarsOnly]);
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       <div className="mt-6 flex max-w-full flex-wrap gap-[2px]">
         <SectionButton
           label={limiteds.label}
@@ -421,7 +425,24 @@ export function SidebarFilters({ onChange }: { onChange?: (filters: Filters) => 
         />
       </div>
 
-      <div className="mt-6 border-t border-gray-700 pt-4">{activeContent}</div>
-    </>
+      <div className="mt-6 flex-1 min-h-0 border-t border-gray-700 pt-4">{activeContent}</div>
+
+
+      <div className="mt-auto shrink-0 pt-6 text-xs text-gray-500">
+        <div className="overflow-hidden whitespace-nowrap">
+          <div
+            className="flex w-max items-center gap-6"
+            style={{ animation: "sidebar-footer-ticker 18s linear infinite" }}
+          >
+            <span>Made with ❤️ by aoderu</span>
+            <span>{`Built in ${buildSeconds.toFixed(3)} seconds!`}</span>
+            <span>{`Showing ${carCount} cars right now!`}</span>
+            <span aria-hidden="true">Made with ❤️ by aoderu</span>
+            <span aria-hidden="true">{`Built in ${buildSeconds.toFixed(3)} seconds!`}</span>
+            <span aria-hidden="true">{`Showing ${carCount} cars right now!`}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -235,74 +235,31 @@ export function SidebarFilters({
   }
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
-
     let isMounted = true;
 
     const load = async () => {
-      const viewName = getViewName();
-      const batchSize = 1000;
-      const rows: Record<string, any>[] = [];
-      let startIndex = 0;
-
-      while (true) {
-        const endIndex = startIndex + batchSize - 1;
-        const { data, error } = await supabase.from(viewName).select("*").range(startIndex, endIndex);
-
+      try {
+        const resp = await fetch(`/api/data?mode=filters`);
+        const json = await resp.json();
         if (!isMounted) return;
+        if (!resp.ok) return;
 
-        if (error) return;
+        const mapToOptions = (arr: string[] | undefined) => (arr ?? []).map((v) => ({ label: String(v), value: String(v) }));
 
-        if (!data || data.length === 0) {
-          break;
-        }
+        const dealershipVals = mapToOptions(json.dealerships).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+        const limitedVals = mapToOptions(json.limiteds).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+        const gamepassVals = mapToOptions(json.gamepasses).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
 
-        rows.push(...(data as Record<string, any>[]));
+        setDealershipOptions(dealershipVals);
+        setDealershipValues(dealershipVals.map((o) => o.value));
 
-        if (data.length < batchSize) {
-          break;
-        }
+        setLimitedOptions(limitedVals);
+        setLimitedValues(limitedVals.map((o) => o.value));
 
-        startIndex += batchSize;
-      }
-
-      if (rows.length === 0) return;
-
-      const columns = Object.keys(rows[0]);
-
-      const findColumn = (patterns: string[]) =>
-        columns.find((c) => patterns.some((p) => c.toLowerCase().includes(p)));
-
-      const dealershipCol = findColumn(["dealership", "dealer"]);
-      const limitedCol = findColumn(["limited", "limiteds"]);
-      const gamepassCol = findColumn(["gamepass"]);
-
-      if (dealershipCol) {
-        const vals = Array.from(new Set(rows.map((r) => r[dealershipCol]).filter(Boolean)))
-          .map((v) => ({ label: String(v), value: String(v) }))
-          .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
-
-        setDealershipOptions(vals);
-        setDealershipValues(vals.map((o) => o.value));
-      }
-
-      if (limitedCol) {
-        const vals = Array.from(new Set(rows.map((r) => r[limitedCol]).filter(Boolean)))
-          .map((v) => ({ label: String(v), value: String(v) }))
-          .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
-
-        setLimitedOptions(vals);
-        setLimitedValues(vals.map((o) => o.value));
-      }
-
-      if (gamepassCol) {
-        const vals = Array.from(new Set(rows.map((r) => r[gamepassCol]).filter(Boolean)))
-          .map((v) => ({ label: String(v), value: String(v) }))
-          .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
-
-        setGamepassOptions(vals);
-        setGamepassValues(vals.map((o) => o.value));
+        setGamepassOptions(gamepassVals);
+        setGamepassValues(gamepassVals.map((o) => o.value));
+      } catch (err) {
+        // ignore failures silently — UI will remain empty
       }
     };
 

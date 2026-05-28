@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getSupabaseClient } from "../lib/supabase";
 import type { Filters } from "./sidebar-filters";
 import type { CardItem } from "./card";
 
@@ -29,77 +28,67 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
   const [rows, setRows] = useState<CardItem[]>(cards);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [serverTotal, setServerTotal] = useState<number | null>(null);
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
-
-    if (!supabase) {
-      setLoadError("Supabase env vars are missing.");
-      return;
-    }
-
     let isMounted = true;
 
     const loadCards = async () => {
-      const viewName = getViewName();
       setIsLoading(true);
       setLoadError(null);
-      const batchSize = 1000;
-      const allRows: SupabaseRow[] = [];
-      let startIndex = 0;
 
-      while (true) {
-        const endIndex = startIndex + batchSize - 1;
-        const { data, error } = await supabase
-          .from(viewName)
-          .select("*")
-          .order("_id", { ascending: true })
-          .range(startIndex, endIndex);
-
-        if (!isMounted) {
-          return;
+      try {
+        const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("pageSize", String(pageSize));
+        if (search && search.trim() !== "") params.set("q", search.trim());
+        if (filters) {
+          if (filters.limiteds && filters.limiteds.length > 0) params.set("limiteds", filters.limiteds.join(","));
+          if (filters.gamepasses && filters.gamepasses.length > 0) params.set("gamepasses", filters.gamepasses.join(","));
+          if (filters.dealerships && filters.dealerships.length > 0) params.set("dealerships", filters.dealerships.join(","));
+          if (filters.priceRange) {
+            if (filters.priceRange.min) params.set("minPrice", String(filters.priceRange.min));
+            if (filters.priceRange.max) params.set("maxPrice", String(filters.priceRange.max));
+          }
+          if (filters.sortBy) params.set("sortBy", filters.sortBy);
         }
 
-        if (error) {
-          setLoadError(error.message);
+        const resp = await fetch(`/api/data?${params.toString()}`);
+        const json = await resp.json();
+        if (!isMounted) return;
+        if (!resp.ok) {
+          setLoadError(json?.error ?? "Failed to load cards");
           setIsLoading(false);
           return;
         }
 
-        if (!data || data.length === 0) {
-          break;
-        }
-
-        allRows.push(...(data as SupabaseRow[]));
-
-        if (data.length < batchSize) {
-          break;
-        }
-
-        startIndex += batchSize;
+        const allRows = (json.data ?? []) as SupabaseRow[];
+        setServerTotal(typeof json.total === "number" ? json.total : null);
+        setRows(
+          allRows.map((card) => ({
+            _id: String((card as any)._id),
+            CarName: String((card as any).CarName ?? ""),
+            Price: Number((card as any).Cost ?? 0),
+            CarImageUrl: String((card as any).CarImageUrl ?? ""),
+            Dealership: String((card as any).Dealership ?? ""),
+            Limited: String((card as any).Limited ?? ""),
+            Gamepass: String((card as any).Gamepass ?? ""),
+            Engine: String((card as any).Engine ?? ""),
+            RimsUrl: String((card as any).RimsUrl ?? ""),
+            rgb_0: String((card as any).rgb_0 ?? "0"),
+            rgb_1: String((card as any).rgb_1 ?? "0"),
+            rgb_2: String((card as any).rgb_2 ?? "0"),
+            Legacy: Boolean((card as any).Legacy),
+            Inaccurate: Boolean((card as any).Inaccurate),
+            Rims: String((card as any).Rims ?? ""),
+            New: Boolean((card as any).New),
+          })),
+        );
+      } catch (err: any) {
+        setLoadError(err?.message ?? String(err));
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-
-      setRows(
-        allRows.map((card) => ({
-          _id: String(card._id),
-          CarName: String(card.CarName),
-          Price: Number(card.Cost),
-          CarImageUrl: String(card.CarImageUrl),
-          Dealership: String(card.Dealership),
-          Limited: String(card.Limited),
-          Gamepass: String(card.Gamepass),
-          Engine: String(card.Engine),
-          RimsUrl: String(card.RimsUrl),
-          rgb_0: String(card.rgb_0),
-          rgb_1: String(card.rgb_1),
-          rgb_2: String(card.rgb_2),
-          Legacy: Boolean(card.Legacy),
-          Inaccurate: Boolean(card.Inaccurate),
-          Rims: String(card.Rims),
-          New: Boolean(card.New),
-        })),
-      );
-      setIsLoading(false);
     };
 
     void loadCards();
@@ -107,7 +96,7 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [page, pageSize, search, filters]);
 
   const filteredRows = useMemo(() => {
     return rows
@@ -161,7 +150,7 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
   }, [filters, rows, search]);
 
   useEffect(() => {
-    onTotalItemsChange?.(filteredRows.length);
+    onTotalItemsChange?.(serverTotal ?? filteredRows.length);
   }, [filteredRows.length, onTotalItemsChange]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));

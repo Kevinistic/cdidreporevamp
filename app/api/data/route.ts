@@ -1,35 +1,65 @@
 import { createClient } from "@supabase/supabase-js";
+import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 
+const getCachedFilterOptions = unstable_cache(
+  async (viewName: string) => {
+    const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+      throw new Error("Server misconfiguration: missing Supabase server key");
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: { persistSession: false },
+    });
+
+    const { data, error } = await supabase.from(viewName).select("Dealership,Limited,Gamepass");
+    if (error) throw new Error(error.message);
+
+    const rows = (data ?? []) as Record<string, any>[];
+
+    const unique = (col: string) =>
+      Array.from(new Set(rows.map((r) => r[col]).filter(Boolean)))
+        .map((v) => String(v))
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
+    return {
+      dealerships: unique("Dealership"),
+      limiteds: unique("Limited"),
+      gamepasses: unique("Gamepass"),
+    };
+  },
+  ["filter-options"],
+  { revalidate: 60 * 60 * 24 },
+);
+
 export async function GET(req: Request) {
-  const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return NextResponse.json({ error: "Server misconfiguration: missing Supabase server key" }, { status: 500 });
-  }
-
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: false },
-  });
-
   const url = new URL(req.url);
   const mode = url.searchParams.get("mode") ?? "cards";
   const viewName = process.env.SUPABASE_VIEW_NAME ?? process.env.NEXT_PUBLIC_SUPABASE_VIEW_NAME ?? "test";
 
   try {
     if (mode === "filters") {
-      // Only select the small set of columns needed for filter generation
-      const { data, error } = await supabase.from(viewName).select("Dealership,Limited,Gamepass");
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-      const rows = (data ?? []) as Record<string, any>[];
-
-      const unique = (col: string) =>
-        Array.from(new Set(rows.map((r) => r[col]).filter(Boolean))).map((v) => String(v)).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
-
-      return NextResponse.json({ dealerships: unique("Dealership"), limiteds: unique("Limited"), gamepasses: unique("Gamepass") });
+      const options = await getCachedFilterOptions(viewName);
+      return NextResponse.json(options, {
+        headers: {
+          "Cache-Control": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800",
+        },
+      });
     }
+
+    const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+      return NextResponse.json({ error: "Server misconfiguration: missing Supabase server key" }, { status: 500 });
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: { persistSession: false },
+    });
 
     // default: cards mode with pagination and optional filters/search
     const page = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
@@ -44,6 +74,7 @@ export async function GET(req: Request) {
     const minPrice = Number(url.searchParams.get("minPrice") ?? "0");
     const maxPrice = Number(url.searchParams.get("maxPrice") ?? "0");
     const sortBy = url.searchParams.get("sortBy") ?? "price-desc";
+    const newCars = (url.searchParams.get("newCars") ?? "false").toLowerCase() === "true";
 
     // Select only the columns the client needs — avoid select('*') here
     const selectCols = `\"_id\",CarName,Cost,CarImageUrl,Dealership,Limited,Gamepass,Engine,RimsUrl,rgb_0,rgb_1,rgb_2,Legacy,Inaccurate,Rims,New`;
@@ -67,6 +98,10 @@ export async function GET(req: Request) {
 
     if (dealerships.length > 0) {
       builder = builder.in("Dealership", dealerships as string[]);
+    }
+
+    if (newCars) {
+      builder = builder.eq("New", true);
     }
 
     // price filtering (Cost column)
@@ -98,7 +133,14 @@ export async function GET(req: Request) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    return NextResponse.json({ data: data ?? [], total: typeof count === "number" ? count : null });
+    return NextResponse.json(
+      { data: data ?? [], total: typeof count === "number" ? count : null },
+      {
+        headers: {
+          "Cache-Control": "no-store, max-age=0",
+        },
+      },
+    );
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? String(err) }, { status: 500 });
   }

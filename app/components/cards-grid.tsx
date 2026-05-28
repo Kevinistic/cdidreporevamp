@@ -6,6 +6,17 @@ import type { CardItem } from "./card";
 
 type SupabaseRow = Record<string, unknown>;
 
+function toBoolean(value: unknown) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "true" || normalized === "1" || normalized === "yes";
+  }
+
+  return Boolean(value);
+}
+
 function getViewName() {
   return process.env.NEXT_PUBLIC_SUPABASE_VIEW_NAME ?? "test";
 }
@@ -46,6 +57,7 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
           if (filters.limiteds && filters.limiteds.length > 0) params.set("limiteds", filters.limiteds.join(","));
           if (filters.gamepasses && filters.gamepasses.length > 0) params.set("gamepasses", filters.gamepasses.join(","));
           if (filters.dealerships && filters.dealerships.length > 0) params.set("dealerships", filters.dealerships.join(","));
+          if (filters.newCars) params.set("newCars", "true");
           if (filters.priceRange) {
             if (filters.priceRange.min) params.set("minPrice", String(filters.priceRange.min));
             if (filters.priceRange.max) params.set("maxPrice", String(filters.priceRange.max));
@@ -53,7 +65,7 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
           if (filters.sortBy) params.set("sortBy", filters.sortBy);
         }
 
-        const resp = await fetch(`/api/data?${params.toString()}`);
+        const resp = await fetch(`/api/data?${params.toString()}`, { cache: "no-store" });
         const json = await resp.json();
         if (!isMounted) return;
         if (!resp.ok) {
@@ -78,10 +90,10 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
             rgb_0: String((card as any).rgb_0 ?? "0"),
             rgb_1: String((card as any).rgb_1 ?? "0"),
             rgb_2: String((card as any).rgb_2 ?? "0"),
-            Legacy: Boolean((card as any).Legacy),
-            Inaccurate: Boolean((card as any).Inaccurate),
+            Legacy: toBoolean((card as any).Legacy),
+            Inaccurate: toBoolean((card as any).Inaccurate),
             Rims: String((card as any).Rims ?? ""),
-            New: Boolean((card as any).New),
+            New: toBoolean((card as any).New),
           })),
         );
       } catch (err: any) {
@@ -102,8 +114,6 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
     return rows
       .filter((card) => {
         if (filters) {
-          if (filters.newCars && !card.New) return false;
-
           if (filters.limiteds) {
             const limitedValue = String(card.Limited ?? "");
             if (filters.limiteds.length === 0 || !filters.limiteds.includes(limitedValue)) return false;
@@ -151,7 +161,7 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
 
   useEffect(() => {
     onTotalItemsChange?.(serverTotal ?? filteredRows.length);
-  }, [filteredRows.length, onTotalItemsChange]);
+  }, [filteredRows.length, onTotalItemsChange, serverTotal]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
   const safePage = Math.min(Math.max(page, 1), totalPages);

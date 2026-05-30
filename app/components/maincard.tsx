@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Info } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { CardItem } from "./card";
@@ -12,12 +13,10 @@ type MainCardProps = {
 export function MainCard({ card, onBack }: MainCardProps) {
 	const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
 
-	{/* rims stuff */}
 	const rimsCode = card.Rims?.match(/\d+$/);
 
-	{/* hex stuff */}
 	const clamp = (n: unknown) => {
- 		const v = Number(n as any);
+		const v = Number(n);
  		if (Number.isNaN(v)) return 0;
  		return Math.max(0, Math.min(255, v));
  	};
@@ -92,11 +91,13 @@ export function MainCard({ card, onBack }: MainCardProps) {
 						{card.CarImageUrl ? (
 							<div className="flex flex-1 items-center justify-center">
 								<div className="flex h-full w-full max-w-[420px] flex-col">
-									<div className="h-1/2 w-full flex items-center justify-center">
-										<img
+									<div className="relative h-[320px] w-full">
+										<Image
 											src={card.CarImageUrl}
 											alt={card.CarName}
-											className="h-full w-full max-h-[320px] object-contain"
+											fill
+											sizes="(max-width: 768px) 90vw, 420px"
+											className="object-contain"
 										/>
 									</div>
 
@@ -104,11 +105,15 @@ export function MainCard({ card, onBack }: MainCardProps) {
 										<div className="flex-1 flex items-center justify-center p-2">
 											{card.RimsUrl ? (
 												<div className="flex flex-col items-center w-full h-full">
-													<img
-														src={card.RimsUrl}
-														alt={`${card.CarName} rims`}
-														className="h-full w-full max-h-[160px] max-w-full object-contain"
-													/>
+													<div className="relative h-[160px] w-full max-w-full">
+														<Image
+															src={card.RimsUrl}
+															alt={`${card.CarName} rims`}
+															fill
+															sizes="(max-width: 768px) 45vw, 200px"
+															className="object-contain"
+														/>
+													</div>
 													<span className="sr-only">Rims image</span>
 													<p className="mt-1 text-xs text-gray-400 break-all">{`Code: ${rimsCode ? rimsCode[0] : 'N/A'}`}</p>
 												</div>

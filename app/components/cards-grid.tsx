@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { Filters } from "./sidebar-filters";
 import type { CardItem } from "./card";
@@ -326,13 +327,15 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
               <p className="mt-1 text-lg text-center">Rp. {card.Price.toLocaleString('de-DE')}</p>
             </div>
             {card.CarImageUrl && (
-              <img
-                src={card.CarImageUrl}
-                alt={card.CarName}
-                className="mb-2 block max-h-48 w-auto max-w-full mx-auto object-contain"
-                loading="lazy"
-                decoding="async"
-              />
+              <div className="relative mb-2 h-48 w-full">
+                <Image
+                  src={card.CarImageUrl}
+                  alt={card.CarName}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  className="object-contain"
+                />
+              </div>
             )}
           </button>
         ))}

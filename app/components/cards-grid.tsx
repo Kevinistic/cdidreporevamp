@@ -110,63 +110,16 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
     };
   }, [page, pageSize, search, filters]);
 
-  const filteredRows = useMemo(() => {
-    return rows
-      .filter((card) => {
-        if (filters) {
-          if (filters.limiteds) {
-            const limitedValue = String(card.Limited ?? "");
-            if (filters.limiteds.length === 0 || !filters.limiteds.includes(limitedValue)) return false;
-          }
-
-          if (filters.gamepasses) {
-            const gamepassValue = String(card.Gamepass ?? "");
-            if (filters.gamepasses.length === 0 || !filters.gamepasses.includes(gamepassValue)) return false;
-          }
-
-          if (filters.dealerships) {
-            const dealership = (card.Dealership ?? "").toString();
-            if (filters.dealerships.length === 0 || !filters.dealerships.includes(dealership)) return false;
-          }
-
-          if (filters.priceRange) {
-            const min = Number(filters.priceRange.min) || 0;
-            const max = Number(filters.priceRange.max) || Infinity;
-            if (!(min === 0 && max === 0) && (card.Price < min || card.Price > max)) return false;
-          }
-        }
-
-        if (search && search.trim() !== "") {
-          if (!card.CarName.toLowerCase().includes(search.toLowerCase())) return false;
-        }
-
-        return true;
-      })
-      .sort((a, b) => {
-        const sortBy = filters?.sortBy ?? "price-desc";
-        switch (sortBy) {
-          case "name-asc":
-            return a.CarName.localeCompare(b.CarName);
-          case "name-desc":
-            return b.CarName.localeCompare(a.CarName);
-          case "price-asc":
-            return a.Price - b.Price;
-          case "price-desc":
-            return b.Price - a.Price;
-          default:
-            return 0;
-        }
-      });
-  }, [filters, rows, search]);
+  // Server applies filtering, sorting and paging. `rows` represents the current page returned by the server.
 
   useEffect(() => {
-    onTotalItemsChange?.(serverTotal ?? filteredRows.length);
-  }, [filteredRows.length, onTotalItemsChange, serverTotal]);
+    onTotalItemsChange?.(serverTotal ?? rows.length);
+  }, [serverTotal, rows.length, onTotalItemsChange]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil((serverTotal ?? rows.length) / pageSize));
   const safePage = Math.min(Math.max(page, 1), totalPages);
-  const startIndex = (safePage - 1) * pageSize;
-  const pagedRows = filteredRows.slice(startIndex, startIndex + pageSize);
+  // rows are already paged by the server; render them directly
+  const pagedRows = rows;
 
   return (
     <section

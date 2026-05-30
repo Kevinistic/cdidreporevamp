@@ -91,7 +91,7 @@ export function MainCard({ card, onBack }: MainCardProps) {
 						{card.CarImageUrl ? (
 							<div className="flex flex-1 items-center justify-center">
 								<div className="flex h-full w-full max-w-[420px] flex-col">
-									<div className="relative h-[320px] w-full">
+											<div className="relative aspect-square w-full">
 										<Image
 											src={card.CarImageUrl}
 											alt={card.CarName}
@@ -104,8 +104,8 @@ export function MainCard({ card, onBack }: MainCardProps) {
 									<div className="h-1/2 w-full flex">
 										<div className="flex-1 flex items-center justify-center p-2">
 											{card.RimsUrl ? (
-												<div className="flex flex-col items-center w-full h-full">
-													<div className="relative h-[160px] w-full max-w-full">
+												<div className="flex w-full flex-col items-center">
+													<div className="relative aspect-square w-full max-w-[160px]">
 														<Image
 															src={card.RimsUrl}
 															alt={`${card.CarName} rims`}

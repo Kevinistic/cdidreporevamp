@@ -259,7 +259,7 @@ export function SidebarFilters({
         setGamepassOptions(gamepassVals);
         setGamepassValues(gamepassVals.map((o) => o.value));
       } catch (err) {
-        // ignore failures silently — UI will remain empty
+        // ignore failures silently
       }
     };
 

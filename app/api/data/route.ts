@@ -2,23 +2,142 @@ import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 
+type CardQuery = {
+  page: number;
+  pageSize: number;
+  q: string;
+  limiteds: string[];
+  gamepasses: string[];
+  dealerships: string[];
+  minPrice: number;
+  maxPrice: number;
+  sortBy: string;
+  newCars: boolean;
+};
+
+type CardRow = Record<string, unknown>;
+
+type CardQueryBuilder = {
+  ilike(column: string, pattern: string): CardQueryBuilder;
+  in(column: string, values: string[]): CardQueryBuilder;
+  eq(column: string, value: boolean): CardQueryBuilder;
+  gte(column: string, value: number): CardQueryBuilder;
+  lte(column: string, value: number): CardQueryBuilder;
+  order(column: string, options: { ascending: boolean }): CardQueryBuilder;
+  range(start: number, end: number): Promise<{ data: CardRow[] | null; error: { message: string } | null }>;
+};
+
+type CardCountResult = {
+  count: number | null;
+  error: { message: string } | null;
+};
+
+const CARD_SELECT_COLUMNS = `"_id",CarName,Cost,CarImageUrl,Dealership,Limited,Gamepass,Engine,RimsUrl,rgb_0,rgb_1,rgb_2,Legacy,Inaccurate,Rims,New`;
+
+function createSupabaseClient() {
+  const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    throw new Error("Server misconfiguration: missing Supabase server key");
+  }
+
+  return createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: false },
+  });
+}
+
+function parseCardQuery(url: URL): CardQuery {
+  const normalizeList = (value: string | null) =>
+    (value ?? "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
+  return {
+    page: Math.max(1, Number(url.searchParams.get("page") ?? "1")),
+    pageSize: Math.min(200, Math.max(1, Number(url.searchParams.get("pageSize") ?? "40"))),
+    q: (url.searchParams.get("q") ?? "").trim(),
+    limiteds: normalizeList(url.searchParams.get("limiteds")),
+    gamepasses: normalizeList(url.searchParams.get("gamepasses")),
+    dealerships: normalizeList(url.searchParams.get("dealerships")),
+    minPrice: Number(url.searchParams.get("minPrice") ?? "0"),
+    maxPrice: Number(url.searchParams.get("maxPrice") ?? "0"),
+    sortBy: url.searchParams.get("sortBy") ?? "price-desc",
+    newCars: (url.searchParams.get("newCars") ?? "false").toLowerCase() === "true",
+  };
+}
+
+function buildCountKey(query: CardQuery) {
+  return JSON.stringify({
+    q: query.q,
+    limiteds: query.limiteds,
+    gamepasses: query.gamepasses,
+    dealerships: query.dealerships,
+    minPrice: query.minPrice,
+    maxPrice: query.maxPrice,
+    newCars: query.newCars,
+  });
+}
+
+function buildPageKey(query: CardQuery) {
+  return JSON.stringify({
+    page: query.page,
+    pageSize: query.pageSize,
+    q: query.q,
+    limiteds: query.limiteds,
+    gamepasses: query.gamepasses,
+    dealerships: query.dealerships,
+    minPrice: query.minPrice,
+    maxPrice: query.maxPrice,
+    sortBy: query.sortBy,
+    newCars: query.newCars,
+  });
+}
+
+function applyCardFilters(builder: CardQueryBuilder, query: CardQuery) {
+  let filtered = builder;
+
+  if (query.q !== "") {
+    filtered = filtered.ilike("CarName", `%${query.q}%`);
+  }
+
+  if (query.limiteds.length > 0) {
+    filtered = filtered.in("Limited", query.limiteds);
+  }
+
+  if (query.gamepasses.length > 0) {
+    filtered = filtered.in("Gamepass", query.gamepasses);
+  }
+
+  if (query.dealerships.length > 0) {
+    filtered = filtered.in("Dealership", query.dealerships);
+  }
+
+  if (query.newCars) {
+    filtered = filtered.eq("New", true);
+  }
+
+  if (!Number.isNaN(query.minPrice) && query.minPrice > 0) {
+    filtered = filtered.gte("Cost", query.minPrice);
+  }
+
+  if (!Number.isNaN(query.maxPrice) && query.maxPrice > 0) {
+    filtered = filtered.lte("Cost", query.maxPrice);
+  }
+
+  return filtered;
+}
+
 const getCachedFilterOptions = unstable_cache(
   async (viewName: string) => {
-    const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-    if (!SUPABASE_URL || !SUPABASE_KEY) {
-      throw new Error("Server misconfiguration: missing Supabase server key");
-    }
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: { persistSession: false },
-    });
+    const supabase = createSupabaseClient();
 
     const { data, error } = await supabase.from(viewName).select("Dealership,Limited,Gamepass");
     if (error) throw new Error(error.message);
 
-    const rows = (data ?? []) as Record<string, any>[];
+    const rows = (data ?? []) as Record<string, unknown>[];
 
     const unique = (col: string) =>
       Array.from(new Set(rows.map((r) => r[col]).filter(Boolean)))
@@ -33,6 +152,60 @@ const getCachedFilterOptions = unstable_cache(
   },
   ["filter-options"],
   { revalidate: 60 * 60 * 24 },
+);
+
+const getCachedCardPage = unstable_cache(
+  async (viewName: string, pageKey: string) => {
+    const query = JSON.parse(pageKey) as CardQuery;
+    const supabase = createSupabaseClient();
+    const start = (query.page - 1) * query.pageSize;
+    const end = start + query.pageSize - 1;
+
+    let builder = supabase.from(viewName).select(CARD_SELECT_COLUMNS) as unknown as CardQueryBuilder;
+    builder = applyCardFilters(builder, query);
+
+    switch (query.sortBy) {
+      case "name-asc":
+        builder = builder.order("CarName", { ascending: true });
+        break;
+      case "name-desc":
+        builder = builder.order("CarName", { ascending: false });
+        break;
+      case "price-asc":
+        builder = builder.order("Cost", { ascending: true });
+        break;
+      case "price-desc":
+      default:
+        builder = builder.order("Cost", { ascending: false });
+        break;
+    }
+
+    const { data, error } = await builder.range(start, end);
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []) as CardRow[];
+  },
+  ["cards-page"],
+  { revalidate: 60 },
+);
+
+const getCachedCardTotal = unstable_cache(
+  async (viewName: string, countKey: string) => {
+    const query = JSON.parse(countKey) as CardQuery;
+    const supabase = createSupabaseClient();
+
+    let builder = supabase.from(viewName).select("_id", { count: "exact", head: true }) as unknown as CardQueryBuilder;
+    builder = applyCardFilters(builder, query);
+
+    const { count, error } = await (builder as unknown as Promise<CardCountResult>);
+
+    if (error) throw new Error(error.message);
+
+    return typeof count === "number" ? count : null;
+  },
+  ["cards-total"],
+  { revalidate: 300 },
 );
 
 export async function GET(req: Request) {
@@ -50,98 +223,22 @@ export async function GET(req: Request) {
       });
     }
 
-    const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    const query = parseCardQuery(url);
+    const pageKey = buildPageKey(query);
+    const countKey = buildCountKey(query);
 
-    if (!SUPABASE_URL || !SUPABASE_KEY) {
-      return NextResponse.json({ error: "Server misconfiguration: missing Supabase server key" }, { status: 500 });
-    }
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: { persistSession: false },
-    });
-
-    // default: cards mode with pagination and optional filters/search
-    const page = Math.max(1, Number(url.searchParams.get("page") ?? "1"));
-    const pageSize = Math.min(200, Math.max(1, Number(url.searchParams.get("pageSize") ?? "40")));
-    const start = (page - 1) * pageSize;
-    const end = start + pageSize - 1;
-
-    const q = url.searchParams.get("q") ?? "";
-    const limiteds = (url.searchParams.get("limiteds") ?? "").split(",").filter(Boolean);
-    const gamepasses = (url.searchParams.get("gamepasses") ?? "").split(",").filter(Boolean);
-    const dealerships = (url.searchParams.get("dealerships") ?? "").split(",").filter(Boolean);
-    const minPrice = Number(url.searchParams.get("minPrice") ?? "0");
-    const maxPrice = Number(url.searchParams.get("maxPrice") ?? "0");
-    const sortBy = url.searchParams.get("sortBy") ?? "price-desc";
-    const newCars = (url.searchParams.get("newCars") ?? "false").toLowerCase() === "true";
-
-    // Select only the columns the client needs — avoid select('*') here
-    const selectCols = `\"_id\",CarName,Cost,CarImageUrl,Dealership,Limited,Gamepass,Engine,RimsUrl,rgb_0,rgb_1,rgb_2,Legacy,Inaccurate,Rims,New`;
-
-    let builder = supabase.from(viewName).select(selectCols, { count: "exact" });
-
-    // apply search
-    if (q.trim() !== "") {
-      // case-insensitive contains for CarName
-      builder = builder.ilike("CarName", `%${q}%`);
-    }
-
-    // apply filters (use .in when multiple values provided)
-    if (limiteds.length > 0) {
-      builder = builder.in("Limited", limiteds as string[]);
-    }
-
-    if (gamepasses.length > 0) {
-      builder = builder.in("Gamepass", gamepasses as string[]);
-    }
-
-    if (dealerships.length > 0) {
-      builder = builder.in("Dealership", dealerships as string[]);
-    }
-
-    if (newCars) {
-      builder = builder.eq("New", true);
-    }
-
-    // price filtering (Cost column)
-    if (!Number.isNaN(minPrice) && minPrice > 0) {
-      builder = builder.gte("Cost", minPrice);
-    }
-    if (!Number.isNaN(maxPrice) && maxPrice > 0) {
-      builder = builder.lte("Cost", maxPrice);
-    }
-
-    // sorting
-    switch (sortBy) {
-      case "name-asc":
-        builder = builder.order("CarName", { ascending: true });
-        break;
-      case "name-desc":
-        builder = builder.order("CarName", { ascending: false });
-        break;
-      case "price-asc":
-        builder = builder.order("Cost", { ascending: true });
-        break;
-      case "price-desc":
-      default:
-        builder = builder.order("Cost", { ascending: false });
-        break;
-    }
-
-    const { data, error, count } = await builder.range(start, end);
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const [data, total] = await Promise.all([getCachedCardPage(viewName, pageKey), getCachedCardTotal(viewName, countKey)]);
 
     return NextResponse.json(
-      { data: data ?? [], total: typeof count === "number" ? count : null },
+      { data, total },
       {
         headers: {
-          "Cache-Control": "no-store, max-age=0",
+          "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
         },
       },
     );
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message ?? String(err) }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

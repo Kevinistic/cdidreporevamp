@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type { Filters } from "./sidebar-filters";
 import type { CardItem } from "./card";
 
@@ -33,278 +33,102 @@ type CardsGridProps = {
   pageSize: number;
   onTotalItemsChange?: (totalItems: number) => void;
   onCardClick?: (card: CardItem) => void;
+  isLoading?: boolean;
 };
 
 export type { CardItem };
 
 const EMPTY_CARDS: CardItem[] = [];
 
-function normalizeFilterValues(values: string[] | undefined) {
-  return (values ?? []).map((value) => value.trim()).filter(Boolean).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
-}
-
-function buildRequestKey({
+export function CardsGrid({
+  cards = EMPTY_CARDS,
   search,
   filters,
   page,
   pageSize,
-}: {
-  search?: string;
-  filters?: Filters;
-  page: number;
-  pageSize: number;
-}) {
-  return JSON.stringify({
-    search: search?.trim() ?? "",
-    limiteds: normalizeFilterValues(filters?.limiteds),
-    gamepasses: normalizeFilterValues(filters?.gamepasses),
-    dealerships: normalizeFilterValues(filters?.dealerships),
-    minPrice: filters?.priceRange?.min ?? "",
-    maxPrice: filters?.priceRange?.max ?? "",
-    sortBy: filters?.sortBy ?? "",
-    newCars: filters?.newCars ?? false,
-    page,
-    pageSize,
-  });
-}
+  onTotalItemsChange,
+  onCardClick,
+  isLoading = false,
+}: CardsGridProps) {
+  // 1. Client-side filtering and sorting
+  const filteredAndSorted = useMemo(() => {
+    let result = [...cards];
 
-function buildRequestParams({
-  search,
-  filters,
-  page,
-  pageSize,
-}: {
-  search?: string;
-  filters?: Filters;
-  page: number;
-  pageSize: number;
-}) {
-  const params = new URLSearchParams();
-  params.set("page", String(page));
-  params.set("pageSize", String(pageSize));
-
-  if (search && search.trim() !== "") params.set("q", search.trim());
-
-  if (filters) {
-    const limiteds = normalizeFilterValues(filters.limiteds);
-    const gamepasses = normalizeFilterValues(filters.gamepasses);
-    const dealerships = normalizeFilterValues(filters.dealerships);
-
-    if (limiteds.length > 0) params.set("limiteds", limiteds.join(","));
-    if (gamepasses.length > 0) params.set("gamepasses", gamepasses.join(","));
-    if (dealerships.length > 0) params.set("dealerships", dealerships.join(","));
-    if (filters.newCars) params.set("newCars", "true");
-    if (filters.priceRange) {
-      if (filters.priceRange.min) params.set("minPrice", String(filters.priceRange.min));
-      if (filters.priceRange.max) params.set("maxPrice", String(filters.priceRange.max));
-    }
-    if (filters.sortBy) params.set("sortBy", filters.sortBy);
-  }
-
-  return params;
-}
-
-function toCardItem(card: SupabaseRow): CardItem {
-  const row = card as Record<string, unknown>;
-
-  return {
-    _id: String(row._id ?? ""),
-    CarName: String(row.CarName ?? ""),
-    Price: Number(row.Cost ?? 0),
-    CarImageUrl: String(row.CarImageUrl ?? ""),
-    Dealership: String(row.Dealership ?? ""),
-    Limited: String(row.Limited ?? ""),
-    Gamepass: String(row.Gamepass ?? ""),
-    Engine: String(row.Engine ?? ""),
-    RimsUrl: String(row.RimsUrl ?? ""),
-    rgb_0: String(row.rgb_0 ?? "0"),
-    rgb_1: String(row.rgb_1 ?? "0"),
-    rgb_2: String(row.rgb_2 ?? "0"),
-    Legacy: toBoolean(row.Legacy),
-    Inaccurate: toBoolean(row.Inaccurate),
-    Rims: String(row.Rims ?? ""),
-    New: toBoolean(row.New),
-  };
-}
-
-async function requestPageData({
-  search,
-  filters,
-  page,
-  pageSize,
-  signal,
-  pageCacheRef,
-  inFlightRef,
-}: {
-  search?: string;
-  filters?: Filters;
-  page: number;
-  pageSize: number;
-  signal?: AbortSignal;
-  pageCacheRef: React.RefObject<Map<string, CachedPage>>;
-  inFlightRef: React.RefObject<Map<string, Promise<CachedPage>>>;
-}) {
-  const cacheKey = buildRequestKey({ search, filters, page, pageSize });
-  const cached = pageCacheRef.current.get(cacheKey);
-
-  if (cached) {
-    return cached;
-  }
-
-  const inFlight = inFlightRef.current.get(cacheKey);
-  if (inFlight) {
-    return inFlight;
-  }
-
-  const request = (async () => {
-    const params = buildRequestParams({ search, filters, page, pageSize });
-    const resp = await fetch(`/api/data?${params.toString()}`, { cache: "no-store", signal });
-    const json = await resp.json();
-
-    if (!resp.ok) {
-      throw new Error(json?.error ?? "Failed to load cards");
+    // Search Query (case-insensitive includes)
+    if (search && search.trim() !== "") {
+      const q = search.trim().toLowerCase();
+      result = result.filter((card) =>
+        card.CarName.toLowerCase().includes(q)
+      );
     }
 
-    const cachedPage: CachedPage = {
-      total: typeof json.total === "number" ? json.total : null,
-      rows: ((json.data ?? []) as SupabaseRow[]).map(toCardItem),
-    };
-
-    pageCacheRef.current.set(cacheKey, cachedPage);
-    return cachedPage;
-  })();
-
-  inFlightRef.current.set(cacheKey, request);
-
-  try {
-    return await request;
-  } finally {
-    inFlightRef.current.delete(cacheKey);
-  }
-}
-
-async function prefetchPageData({
-  search,
-  filters,
-  pageToLoad,
-  pageSize,
-  currentPage,
-  pageCacheRef,
-  inFlightRef,
-}: {
-  search?: string;
-  filters?: Filters;
-  pageToLoad: number;
-  pageSize: number;
-  currentPage: number;
-  pageCacheRef: React.RefObject<Map<string, CachedPage>>;
-  inFlightRef: React.RefObject<Map<string, Promise<CachedPage>>>;
-}) {
-  if (pageToLoad < 1) {
-    return;
-  }
-
-  if (Math.abs(pageToLoad - currentPage) > MAX_PREFETCH_DISTANCE) {
-    return;
-  }
-
-  const cacheKey = buildRequestKey({ search, filters, page: pageToLoad, pageSize });
-  if (pageCacheRef.current.has(cacheKey) || inFlightRef.current.has(cacheKey)) {
-    return;
-  }
-
-  try {
-    await requestPageData({ search, filters, page: pageToLoad, pageSize, pageCacheRef, inFlightRef });
-  } catch {
-    // prefetch is best-effort.
-  }
-}
-
-export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize, onTotalItemsChange, onCardClick }: CardsGridProps) {
-  const [rows, setRows] = useState<CardItem[]>(cards);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [serverTotal, setServerTotal] = useState<number | null>(null);
-  const pageCacheRef = useRef(new Map<string, CachedPage>());
-  const inFlightRef = useRef(new Map<string, Promise<CachedPage>>());
-
-  useEffect(() => {
-    const controller = new AbortController();
-    let isActive = true;
-
-    const loadCards = async () => {
-      setLoadError(null);
-
-      try {
-        const cacheKey = buildRequestKey({ search, filters, page, pageSize });
-        const cached = pageCacheRef.current.get(cacheKey);
-
-        if (cached) {
-          setRows(cached.rows);
-          setServerTotal(cached.total);
-          setIsLoading(false);
-        } else {
-          setIsLoading(true);
-        }
-
-        const payload = await requestPageData({
-          search,
-          filters,
-          page,
-          pageSize,
-          signal: controller.signal,
-          pageCacheRef,
-          inFlightRef,
-        });
-        if (!isActive) return;
-
-        setServerTotal(payload.total);
-        setRows(payload.rows);
-        setIsLoading(false);
-
-        void prefetchPageData({
-          search,
-          filters,
-          pageToLoad: page + 1,
-          pageSize,
-          currentPage: page,
-          pageCacheRef,
-          inFlightRef,
-        });
-        void prefetchPageData({
-          search,
-          filters,
-          pageToLoad: page - 1,
-          pageSize,
-          currentPage: page,
-          pageCacheRef,
-          inFlightRef,
-        });
-      } catch (err: unknown) {
-        if (!isActive || controller.signal.aborted) return;
-
-        setLoadError(err instanceof Error ? err.message : String(err));
-        setIsLoading(false);
-      } finally {
+    // Sidebar Filters
+    if (filters) {
+      // Dealership options filter
+      if (filters.dealerships && filters.dealerships.length > 0) {
+        result = result.filter((card) =>
+          filters.dealerships.includes(card.Dealership)
+        );
       }
-    };
+      // Limited status filter
+      if (filters.limiteds && filters.limiteds.length > 0) {
+        result = result.filter((card) =>
+          filters.limiteds.includes(card.Limited)
+        );
+      }
+      // Gamepass options filter
+      if (filters.gamepasses && filters.gamepasses.length > 0) {
+        result = result.filter((card) =>
+          filters.gamepasses.includes(card.Gamepass)
+        );
+      }
+      // New cars filter
+      if (filters.newCars) {
+        result = result.filter((card) => card.New);
+      }
+      // Price range filter
+      if (filters.priceRange) {
+        const minVal = parseFloat(filters.priceRange.min);
+        const maxVal = parseFloat(filters.priceRange.max);
+        if (!Number.isNaN(minVal) && minVal > 0) {
+          result = result.filter((card) => card.Price >= minVal);
+        }
+        if (!Number.isNaN(maxVal) && maxVal > 0) {
+          result = result.filter((card) => card.Price <= maxVal);
+        }
+      }
 
-    void loadCards();
+      // Sorting
+      const sortBy = filters.sortBy || "price-desc";
+      result.sort((a, b) => {
+        if (sortBy === "name-asc") {
+          return a.CarName.localeCompare(b.CarName, undefined, { sensitivity: "base" });
+        }
+        if (sortBy === "name-desc") {
+          return b.CarName.localeCompare(a.CarName, undefined, { sensitivity: "base" });
+        }
+        if (sortBy === "price-asc") {
+          return a.Price - b.Price;
+        }
+        // price-desc or default
+        return b.Price - a.Price;
+      });
+    }
 
-    return () => {
-      isActive = false;
-      controller.abort();
-    };
-  }, [page, pageSize, search, filters]);
+    return result;
+  }, [cards, search, filters]);
 
-  // server applies filtering, sorting and paging. 'rows' represents the current page returned by the server
-
+  // Notify parent of total results count
   useEffect(() => {
-    onTotalItemsChange?.(serverTotal ?? rows.length);
-  }, [serverTotal, rows.length, onTotalItemsChange]);
+    onTotalItemsChange?.(filteredAndSorted.length);
+  }, [filteredAndSorted.length, onTotalItemsChange]);
 
-  // rows are already paged by the server, render them directly
-  const pagedRows = rows;
+  // Page the rows client-side
+  const pagedRows = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredAndSorted.slice(start, end);
+  }, [filteredAndSorted, page, pageSize]);
 
   return (
     <section
@@ -312,7 +136,6 @@ export function CardsGrid({ cards = EMPTY_CARDS, search, filters, page, pageSize
       [&::-webkit-scrollbar]:w-2
       [&::-webkit-scrollbar-thumb]:bg-gray-600"
     >
-      {loadError ? <p className="mb-2 text-sm text-red-400">{loadError}</p> : null}
       {isLoading ? <p className="mb-2 text-xs uppercase tracking-[0.2em] text-gray-500">Loading page...</p> : null}
       <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {pagedRows.map((card) => (

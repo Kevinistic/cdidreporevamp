@@ -1,7 +1,6 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
-import { getSupabaseClient } from "../lib/supabase";
 
 type DropdownOption = {
   label: string;
@@ -119,11 +118,19 @@ function PricePanel({
   maxPrice,
   onMinChange,
   onMaxChange,
+  onMinFocus,
+  onMinBlur,
+  onMaxFocus,
+  onMaxBlur,
 }: {
   minPrice: string;
   maxPrice: string;
   onMinChange: (value: string) => void;
   onMaxChange: (value: string) => void;
+  onMinFocus: () => void;
+  onMinBlur: () => void;
+  onMaxFocus: () => void;
+  onMaxBlur: () => void;
 }) {
   return (
     <div className="space-y-3 p-1 text-sm text-white">
@@ -132,6 +139,8 @@ function PricePanel({
         <input
           type="text"
           value={minPrice}
+          onFocus={onMinFocus}
+          onBlur={onMinBlur}
           onChange={(event) => onMinChange(normalizePriceInput(event.target.value))}
           placeholder="Enter minimum"
           className="w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -143,6 +152,8 @@ function PricePanel({
         <input
           type="text"
           value={maxPrice}
+          onFocus={onMaxFocus}
+          onBlur={onMaxBlur}
           onChange={(event) => onMaxChange(normalizePriceInput(event.target.value))}
           placeholder="Enter maximum"
           className="w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -194,12 +205,18 @@ export function SidebarFilters({
   onChange,
   carCount = 0,
   buildSeconds = 0,
-}: { onChange?: (filters: Filters) => void; carCount?: number; buildSeconds?: number }) {
+  dealershipOptions = [],
+  limitedOptions = [],
+  gamepassOptions = [],
+}: {
+  onChange?: (filters: Filters) => void;
+  carCount?: number;
+  buildSeconds?: number;
+  dealershipOptions?: DropdownOption[];
+  limitedOptions?: DropdownOption[];
+  gamepassOptions?: DropdownOption[];
+}) {
   const [activeSection, setActiveSection] = useState<SectionKey>("limiteds");
-
-  const [limitedOptions, setLimitedOptions] = useState<DropdownOption[]>([]);
-  const [gamepassOptions, setGamepassOptions] = useState<DropdownOption[]>([]);
-  const [dealershipOptions, setDealershipOptions] = useState<DropdownOption[]>([]);
 
   const price = buildPriceDropdown("Price");
 
@@ -226,49 +243,34 @@ export function SidebarFilters({
   const [gamepassValues, setGamepassValues] = useState<string[]>([]);
   const [dealershipValues, setDealershipValues] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<PriceRange>({ min: "0", max: "180000000000" });
+  const [priceInput, setPriceInput] = useState<PriceRange>({ min: "0", max: "180000000000" });
+  const [priceFocused, setPriceFocused] = useState<{ min: boolean; max: boolean }>({ min: false, max: false });
   const [sortByValue, setSortByValue] = useState<string>(sortBy.options[3].value);
   const [otherValues, setOtherValues] = useState<string[]>([]);
   const [newCarsOnly, setNewCarsOnly] = useState(false);
 
-  function getViewName() {
-    return process.env.NEXT_PUBLIC_SUPABASE_VIEW_NAME ?? "test";
-  }
+  const hasInitializedRef = useRef({ limited: false, gamepass: false, dealership: false });
 
   useEffect(() => {
-    let isMounted = true;
+    if (limitedOptions.length > 0 && !hasInitializedRef.current.limited) {
+      setLimitedValues(limitedOptions.map((o) => o.value));
+      hasInitializedRef.current.limited = true;
+    }
+  }, [limitedOptions]);
 
-    const load = async () => {
-      try {
-        const resp = await fetch(`/api/data?mode=filters`);
-        const json = await resp.json();
-        if (!isMounted) return;
-        if (!resp.ok) return;
+  useEffect(() => {
+    if (gamepassOptions.length > 0 && !hasInitializedRef.current.gamepass) {
+      setGamepassValues(gamepassOptions.map((o) => o.value));
+      hasInitializedRef.current.gamepass = true;
+    }
+  }, [gamepassOptions]);
 
-        const mapToOptions = (arr: string[] | undefined) => (arr ?? []).map((v) => ({ label: String(v), value: String(v) }));
-
-        const dealershipVals = mapToOptions(json.dealerships).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
-        const limitedVals = mapToOptions(json.limiteds).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
-        const gamepassVals = mapToOptions(json.gamepasses).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
-
-        setDealershipOptions(dealershipVals);
-        setDealershipValues(dealershipVals.map((o) => o.value));
-
-        setLimitedOptions(limitedVals);
-        setLimitedValues(limitedVals.map((o) => o.value));
-
-        setGamepassOptions(gamepassVals);
-        setGamepassValues(gamepassVals.map((o) => o.value));
-      } catch (err) {
-        // ignore failures silently
-      }
-    };
-
-    void load();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  useEffect(() => {
+    if (dealershipOptions.length > 0 && !hasInitializedRef.current.dealership) {
+      setDealershipValues(dealershipOptions.map((o) => o.value));
+      hasInitializedRef.current.dealership = true;
+    }
+  }, [dealershipOptions]);
 
   const activeContent = (() => {
     switch (activeSection) {
@@ -314,10 +316,26 @@ export function SidebarFilters({
       case "price":
         return (
           <PricePanel
-            minPrice={formatPrice(priceRange.min)}
-            maxPrice={formatPrice(priceRange.max)}
-            onMinChange={(value) => setPriceRange((current) => ({ ...current, min: value }))}
-            onMaxChange={(value) => setPriceRange((current) => ({ ...current, max: value }))}
+            minPrice={priceFocused.min ? priceInput.min : formatPrice(priceRange.min)}
+            maxPrice={priceFocused.max ? priceInput.max : formatPrice(priceRange.max)}
+            onMinChange={(value) => setPriceInput((current) => ({ ...current, min: value }))}
+            onMaxChange={(value) => setPriceInput((current) => ({ ...current, max: value }))}
+            onMinFocus={() => {
+              setPriceFocused((current) => ({ ...current, min: true }));
+              setPriceInput((current) => ({ ...current, min: priceRange.min }));
+            }}
+            onMaxFocus={() => {
+              setPriceFocused((current) => ({ ...current, max: true }));
+              setPriceInput((current) => ({ ...current, max: priceRange.max }));
+            }}
+            onMinBlur={() => {
+              setPriceFocused((current) => ({ ...current, min: false }));
+              setPriceRange((current) => ({ ...current, min: priceInput.min || "0" }));
+            }}
+            onMaxBlur={() => {
+              setPriceFocused((current) => ({ ...current, max: false }));
+              setPriceRange((current) => ({ ...current, max: priceInput.max || "180000000000" }));
+            }}
           />
         );
       case "sortBy":

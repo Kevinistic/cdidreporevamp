@@ -2,7 +2,7 @@
 
 import { SidebarFilters } from "./sidebar-filters-panel";
 import { CardsGrid, type CardItem } from "./cards-grid";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import type { Filters } from "./sidebar-filters";
 import { TextAlignJustify, ScrollText } from 'lucide-react';
 import { Pagination } from "./pagination-bar";
@@ -19,9 +19,40 @@ export default function HomeClient() {
   const [selectedCard, setSelectedCard] = useState<CardItem | null>(null);
   const [isCreditsVisible, setIsCreditsVisible] = useState(false);
   const [buildSeconds, setBuildSeconds] = useState<number | null>(null);
+  const [allCars, setAllCars] = useState<CardItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const pageSize = 40;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+  useEffect(() => {
+    let active = true;
+    fetch("/data/cars.json")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load cars.json");
+        return res.json();
+      })
+      .then((data) => {
+        if (active) {
+          const normalizedCars = data.map((car: any) => ({
+            ...car,
+            Price: typeof car.Price === "number"
+              ? car.Price
+              : Number(car.Cost ?? car.Price ?? 0),
+          }));
+
+          setAllCars(normalizedCars);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching cars:", err);
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -34,11 +65,30 @@ export default function HomeClient() {
   }, [currentPage, totalPages]);
 
   useEffect(() => {
-    if (buildSeconds === null && totalItems > 0) {
+    if (buildSeconds === null && totalItems > 0 && !isLoading) {
       const elapsedSeconds = (performance.now() - pageStartRef.current) / 1000;
       setBuildSeconds(Number(elapsedSeconds.toFixed(3)));
     }
-  }, [buildSeconds, totalItems]);
+  }, [buildSeconds, totalItems, isLoading]);
+
+  const { dealershipOptions, limitedOptions, gamepassOptions } = useMemo(() => {
+    const getUnique = (col: keyof CardItem) => {
+      const vals = allCars
+        .map((c) => c[col])
+        .filter(Boolean)
+        .map(String);
+      return Array.from(new Set(vals)).sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" })
+      );
+    };
+
+    return {
+      dealershipOptions: getUnique("Dealership").map((v) => ({ label: v, value: v })),
+      limitedOptions: getUnique("Limited").map((v) => ({ label: v, value: v })),
+      gamepassOptions: getUnique("Gamepass").map((v) => ({ label: v, value: v })),
+    };
+  }, [allCars]);
+
 
   return (
     <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
@@ -61,7 +111,14 @@ export default function HomeClient() {
             />
           </div>
 
-          <SidebarFilters onChange={(f) => setFilters(f)} carCount={totalItems} buildSeconds={buildSeconds ?? 0} />
+          <SidebarFilters
+            onChange={(f) => setFilters(f)}
+            carCount={totalItems}
+            buildSeconds={buildSeconds ?? 0}
+            dealershipOptions={dealershipOptions}
+            limitedOptions={limitedOptions}
+            gamepassOptions={gamepassOptions}
+          />
         </div>
       </aside>
       <main
@@ -95,6 +152,8 @@ export default function HomeClient() {
         </header>
         
         <CardsGrid
+          cards={allCars}
+          isLoading={isLoading}
           search={searchQuery}
           filters={filters}
           page={currentPage}

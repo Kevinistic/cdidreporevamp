@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { getSupabaseClient } from "../lib/supabase";
 
 type DropdownOption = {
   label: string;
@@ -194,12 +193,18 @@ export function SidebarFilters({
   onChange,
   carCount = 0,
   buildSeconds = 0,
-}: { onChange?: (filters: Filters) => void; carCount?: number; buildSeconds?: number }) {
+  dealershipOptions = [],
+  limitedOptions = [],
+  gamepassOptions = [],
+}: {
+  onChange?: (filters: Filters) => void;
+  carCount?: number;
+  buildSeconds?: number;
+  dealershipOptions?: DropdownOption[];
+  limitedOptions?: DropdownOption[];
+  gamepassOptions?: DropdownOption[];
+}) {
   const [activeSection, setActiveSection] = useState<SectionKey>("limiteds");
-
-  const [limitedOptions, setLimitedOptions] = useState<DropdownOption[]>([]);
-  const [gamepassOptions, setGamepassOptions] = useState<DropdownOption[]>([]);
-  const [dealershipOptions, setDealershipOptions] = useState<DropdownOption[]>([]);
 
   const price = buildPriceDropdown("Price");
 
@@ -230,45 +235,28 @@ export function SidebarFilters({
   const [otherValues, setOtherValues] = useState<string[]>([]);
   const [newCarsOnly, setNewCarsOnly] = useState(false);
 
-  function getViewName() {
-    return process.env.NEXT_PUBLIC_SUPABASE_VIEW_NAME ?? "test";
-  }
+  const hasInitializedRef = useRef({ limited: false, gamepass: false, dealership: false });
 
   useEffect(() => {
-    let isMounted = true;
+    if (limitedOptions.length > 0 && !hasInitializedRef.current.limited) {
+      setLimitedValues(limitedOptions.map((o) => o.value));
+      hasInitializedRef.current.limited = true;
+    }
+  }, [limitedOptions]);
 
-    const load = async () => {
-      try {
-        const resp = await fetch(`/api/data?mode=filters`);
-        const json = await resp.json();
-        if (!isMounted) return;
-        if (!resp.ok) return;
+  useEffect(() => {
+    if (gamepassOptions.length > 0 && !hasInitializedRef.current.gamepass) {
+      setGamepassValues(gamepassOptions.map((o) => o.value));
+      hasInitializedRef.current.gamepass = true;
+    }
+  }, [gamepassOptions]);
 
-        const mapToOptions = (arr: string[] | undefined) => (arr ?? []).map((v) => ({ label: String(v), value: String(v) }));
-
-        const dealershipVals = mapToOptions(json.dealerships).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
-        const limitedVals = mapToOptions(json.limiteds).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
-        const gamepassVals = mapToOptions(json.gamepasses).sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
-
-        setDealershipOptions(dealershipVals);
-        setDealershipValues(dealershipVals.map((o) => o.value));
-
-        setLimitedOptions(limitedVals);
-        setLimitedValues(limitedVals.map((o) => o.value));
-
-        setGamepassOptions(gamepassVals);
-        setGamepassValues(gamepassVals.map((o) => o.value));
-      } catch (err) {
-        // ignore failures silently
-      }
-    };
-
-    void load();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  useEffect(() => {
+    if (dealershipOptions.length > 0 && !hasInitializedRef.current.dealership) {
+      setDealershipValues(dealershipOptions.map((o) => o.value));
+      hasInitializedRef.current.dealership = true;
+    }
+  }, [dealershipOptions]);
 
   const activeContent = (() => {
     switch (activeSection) {

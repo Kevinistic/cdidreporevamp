@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
 
@@ -118,11 +118,19 @@ function PricePanel({
   maxPrice,
   onMinChange,
   onMaxChange,
+  onMinFocus,
+  onMinBlur,
+  onMaxFocus,
+  onMaxBlur,
 }: {
   minPrice: string;
   maxPrice: string;
   onMinChange: (value: string) => void;
   onMaxChange: (value: string) => void;
+  onMinFocus: () => void;
+  onMinBlur: () => void;
+  onMaxFocus: () => void;
+  onMaxBlur: () => void;
 }) {
   return (
     <div className="space-y-3 p-1 text-sm text-white">
@@ -131,6 +139,8 @@ function PricePanel({
         <input
           type="text"
           value={minPrice}
+          onFocus={onMinFocus}
+          onBlur={onMinBlur}
           onChange={(event) => onMinChange(normalizePriceInput(event.target.value))}
           placeholder="Enter minimum"
           className="w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -142,6 +152,8 @@ function PricePanel({
         <input
           type="text"
           value={maxPrice}
+          onFocus={onMaxFocus}
+          onBlur={onMaxBlur}
           onChange={(event) => onMaxChange(normalizePriceInput(event.target.value))}
           placeholder="Enter maximum"
           className="w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -231,6 +243,8 @@ export function SidebarFilters({
   const [gamepassValues, setGamepassValues] = useState<string[]>([]);
   const [dealershipValues, setDealershipValues] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<PriceRange>({ min: "0", max: "180000000000" });
+  const [priceInput, setPriceInput] = useState<PriceRange>({ min: "0", max: "180000000000" });
+  const [priceFocused, setPriceFocused] = useState<{ min: boolean; max: boolean }>({ min: false, max: false });
   const [sortByValue, setSortByValue] = useState<string>(sortBy.options[3].value);
   const [otherValues, setOtherValues] = useState<string[]>([]);
   const [newCarsOnly, setNewCarsOnly] = useState(false);
@@ -302,10 +316,26 @@ export function SidebarFilters({
       case "price":
         return (
           <PricePanel
-            minPrice={formatPrice(priceRange.min)}
-            maxPrice={formatPrice(priceRange.max)}
-            onMinChange={(value) => setPriceRange((current) => ({ ...current, min: value }))}
-            onMaxChange={(value) => setPriceRange((current) => ({ ...current, max: value }))}
+            minPrice={priceFocused.min ? priceInput.min : formatPrice(priceRange.min)}
+            maxPrice={priceFocused.max ? priceInput.max : formatPrice(priceRange.max)}
+            onMinChange={(value) => setPriceInput((current) => ({ ...current, min: value }))}
+            onMaxChange={(value) => setPriceInput((current) => ({ ...current, max: value }))}
+            onMinFocus={() => {
+              setPriceFocused((current) => ({ ...current, min: true }));
+              setPriceInput((current) => ({ ...current, min: priceRange.min }));
+            }}
+            onMaxFocus={() => {
+              setPriceFocused((current) => ({ ...current, max: true }));
+              setPriceInput((current) => ({ ...current, max: priceRange.max }));
+            }}
+            onMinBlur={() => {
+              setPriceFocused((current) => ({ ...current, min: false }));
+              setPriceRange((current) => ({ ...current, min: priceInput.min || "0" }));
+            }}
+            onMaxBlur={() => {
+              setPriceFocused((current) => ({ ...current, max: false }));
+              setPriceRange((current) => ({ ...current, max: priceInput.max || "180000000000" }));
+            }}
           />
         );
       case "sortBy":

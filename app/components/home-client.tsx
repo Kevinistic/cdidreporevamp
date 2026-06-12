@@ -93,9 +93,11 @@ export default function HomeClient() {
   return (
     <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
       <aside
-        className={`fixed left-0 top-0 z-40 h-full w-80 overflow-hidden border-r border-gray-700 bg-black/95 p-4 backdrop-blur-md transition-transform duration-200 ${
-          isSidebarVisible ? "translate-x-0" : "-translate-x-full pointer-events-none"
-        }`}
+        className={
+          isSidebarVisible
+            ? "fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md transition-transform duration-200 md:left-0 md:top-0 md:h-full md:w-80 md:border-r md:border-gray-700 bottom-0 left-0 right-0 h-[70vh] border-t border-gray-700 md:border-t-0"
+            : "fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md transition-transform duration-200 md:-translate-x-full md:pointer-events-none bottom-0 left-0 right-0 h-[70vh] border-t border-gray-700 translate-y-full md:translate-y-0 md:border-t-0"
+        }
       >
         <div className="flex h-full w-full flex-col">
           <span className="text-xs uppercase tracking-[0.2em]">CDID Car Database (Unofficial)</span>
@@ -121,10 +123,21 @@ export default function HomeClient() {
           />
         </div>
       </aside>
+      
+      {/* Mobile backdrop - only visible on mobile when sidebar is open */}
+      {isSidebarVisible && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={() => setIsSidebarVisible(false)}
+        />
+      )}
+      
       <main
-        className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden transition-[padding-left] duration-200 ${
-          isSidebarVisible ? "pl-80" : "pl-0"
-        }`}
+        className={
+          isSidebarVisible
+            ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden transition-[padding-left,padding-bottom] duration-200 md:pl-80 md:pb-0 pl-0 pb-[70vh]"
+            : "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden transition-[padding-left,padding-bottom] duration-200 md:pl-0 md:pb-0 pl-0 pb-0"
+        }
       >
         <header className="flex h-16 items-center justify-between border-b border-gray-700 px-2">
           <button

@@ -137,7 +137,7 @@ export function CardsGrid({
       [&::-webkit-scrollbar-thumb]:bg-gray-600"
     >
       {isLoading ? <p className="mb-2 text-xs uppercase tracking-[0.2em] text-gray-500">Loading page...</p> : null}
-      <div className="grid gap-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      <div className="grid gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {pagedRows.map((card) => (
           <button
             key={card._id}

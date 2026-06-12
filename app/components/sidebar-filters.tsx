@@ -409,9 +409,9 @@ export function SidebarFilters({
         />
       </div>
 
-      <div className="mt-6 flex-1 min-h-0 border-t border-gray-700 pt-4">{activeContent}</div>
+      <div className="mt-6 flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-600 border-t border-gray-700 pt-4">{activeContent}</div>
 
-
+      {/* Footer ticker */}
       <div className="mt-auto shrink-0 pt-6 text-xs text-gray-500">
         <div className="overflow-hidden whitespace-nowrap">
           <div

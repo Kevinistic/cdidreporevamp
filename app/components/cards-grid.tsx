@@ -137,20 +137,20 @@ export function CardsGrid({
       [&::-webkit-scrollbar-thumb]:bg-gray-600"
     >
       {isLoading ? <p className="mb-2 text-xs uppercase tracking-[0.2em] text-gray-500">Loading page...</p> : null}
-      <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {pagedRows.map((card) => (
           <button
             key={card._id}
             type="button"
             onClick={() => onCardClick?.(card)}
-            className="flex h-full flex-col justify-between rounded-lg border border-gray-700 p-4 text-white shadow-sm hover:bg-gray-800"
+            className="flex h-full flex-col justify-between rounded-lg border border-gray-700 p-2 text-white shadow-sm hover:bg-gray-800"
           >
             <div>
-              <p className="mt-1 text-lg font-bold text-center">{card.CarName}</p>
-              <p className="mt-1 text-lg text-center">Rp. {card.Price.toLocaleString('de-DE')}</p>
+              <p className="text-sm font-bold text-center">{card.CarName}</p>
+              <p className="text-xs text-center">Rp. {card.Price.toLocaleString('de-DE')}</p>
             </div>
             {card.CarImageUrl && (
-              <div className="relative mb-2 h-48 w-full">
+              <div className="relative mb-1 h-24 w-full">
                 <Image
                   src={card.CarImageUrl}
                   alt={card.CarName}

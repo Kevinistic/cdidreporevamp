@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "CDID Car Database (Unofficial)",
-  description: "haha hihi huhu hehe hoho",
+  description: "essentially a wiki but cooler",
 };
 
 export default function RootLayout({

@@ -101,7 +101,7 @@ export function MainCard({ card, onBack }: MainCardProps) {
 										/>
 									</div>
 
-									<div className="h-1/2 w-full flex">
+									<div className="hidden h-1/2 w-full flex">
 										<div className="flex-1 flex items-center justify-center p-2">
 											{card.RimsUrl ? (
 												<div className="flex w-full flex-col items-center">

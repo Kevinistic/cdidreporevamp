@@ -1,6 +1,6 @@
 "use client";
 
-import { SquareArrowOutUpRight, ScrollText, Code, CodeXml, Lightbulb } from "lucide-react";
+import { SquareArrowOutUpRight, ScrollText, CodeXml, Lightbulb } from "lucide-react";
 
 type CreditsProps = {
 	onBack: () => void;
@@ -36,7 +36,7 @@ function CreditsButton({ title, desc, label, href }: CreditsButtonProps) {
 export function Credits({ onBack }: CreditsProps) {
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" onClick={onBack}>
-			<section className="relative flex h-3/5 w-1/2 flex-col overflow-hidden rounded-2xl border border-gray-700 bg-gray-950 text-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+			<section className="relative flex h-[80vh] w-[90vw] max-w-xl flex-col overflow-hidden rounded-2xl border border-gray-700 bg-gray-950 text-white shadow-2xl md:h-3/5 md:w-1/2" onClick={(event) => event.stopPropagation()}>
 				<button type="button" onClick={onBack} className="absolute left-4 top-4 rounded-md border border-gray-600 bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-800">
 					Back
 				</button>

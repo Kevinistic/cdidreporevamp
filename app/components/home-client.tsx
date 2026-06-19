@@ -4,7 +4,7 @@ import { SidebarFilters } from "./sidebar-filters-panel";
 import { CardsGrid, type CardItem } from "./cards-grid";
 import { useEffect, useRef, useState, useMemo } from "react";
 import type { Filters } from "./sidebar-filters";
-import { TextAlignJustify, ScrollText } from 'lucide-react';
+import { SlidersHorizontal, ScrollText } from 'lucide-react';
 import { Pagination } from "./pagination-bar";
 import { MainCard } from "./maincard";
 import { Credits } from "./credits";
@@ -146,7 +146,7 @@ export default function HomeClient() {
             aria-expanded={isSidebarVisible}
             className="rounded-md border border-gray-500 px-2 py-2 text-sm text-white hover:bg-gray-800"
           >
-            <TextAlignJustify size={16} />
+            <SlidersHorizontal size={16} />
           </button>
 
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />

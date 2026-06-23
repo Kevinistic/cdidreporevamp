@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useRef } from "react";
 
@@ -7,7 +7,7 @@ type DropdownOption = {
   value: string;
 };
 
-type SectionKey = "limiteds" | "gamepasses" | "dealerships" | "price" | "sortBy" | "other";
+type SectionKey = "filters" | "price" | "sortBy";
 
 type PriceRange = {
   min: string;
@@ -216,7 +216,7 @@ export function SidebarFilters({
   limitedOptions?: DropdownOption[];
   gamepassOptions?: DropdownOption[];
 }) {
-  const [activeSection, setActiveSection] = useState<SectionKey>("limiteds");
+  const [activeSection, setActiveSection] = useState<SectionKey>("filters");
 
   const price = buildPriceDropdown("Price");
 
@@ -229,15 +229,6 @@ export function SidebarFilters({
       { label: "Price: High to Low", value: "price-desc" },
     ],
   });
-
-  const other = buildDropdown({
-    label: "Other",
-    options: [],
-  });
-
-  const limiteds = buildDropdown({ label: "Limited", options: limitedOptions });
-  const gamepasses = buildDropdown({ label: "Gamepass", options: gamepassOptions });
-  const dealerships = buildDropdown({ label: "Dealership", options: dealershipOptions });
 
   const [limitedValues, setLimitedValues] = useState<string[]>([]);
   const [gamepassValues, setGamepassValues] = useState<string[]>([]);
@@ -274,44 +265,72 @@ export function SidebarFilters({
 
   const activeContent = (() => {
     switch (activeSection) {
-      case "limiteds":
+      case "filters":
         return (
-          <CheckboxPanel
-            options={limitedOptions}
-            selectedValues={limitedValues}
-            onSelectAll={(selected) => setLimitedValues(selected ? limitedOptions.map((o) => o.value) : [])}
-            onToggle={(value) =>
-              setLimitedValues((current) =>
-                current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
-              )
-            }
-          />
-        );
-      case "gamepasses":
-        return (
-          <CheckboxPanel
-            options={gamepassOptions}
-            selectedValues={gamepassValues}
-            onSelectAll={(selected) => setGamepassValues(selected ? gamepassOptions.map((o) => o.value) : [])}
-            onToggle={(value) =>
-              setGamepassValues((current) =>
-                current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
-              )
-            }
-          />
-        );
-      case "dealerships":
-        return (
-          <CheckboxPanel
-            options={dealershipOptions}
-            selectedValues={dealershipValues}
-            onSelectAll={(selected) => setDealershipValues(selected ? dealershipOptions.map((o) => o.value) : [])}
-            onToggle={(value) =>
-              setDealershipValues((current) =>
-                current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
-              )
-            }
-          />
+          <div className="space-y-6">
+            {limitedOptions.length > 0 && (
+              <div>
+                <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Limited</span>
+                <CheckboxPanel
+                  options={limitedOptions}
+                  selectedValues={limitedValues}
+                  onSelectAll={(selected) => setLimitedValues(selected ? limitedOptions.map((o) => o.value) : [])}
+                  onToggle={(value) =>
+                    setLimitedValues((current) =>
+                      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
+                    )
+                  }
+                />
+              </div>
+            )}
+
+            {gamepassOptions.length > 0 && (
+              <div className="border-t border-gray-800/60 pt-4">
+                <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Gamepass</span>
+                <CheckboxPanel
+                  options={gamepassOptions}
+                  selectedValues={gamepassValues}
+                  onSelectAll={(selected) => setGamepassValues(selected ? gamepassOptions.map((o) => o.value) : [])}
+                  onToggle={(value) =>
+                    setGamepassValues((current) =>
+                      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
+                    )
+                  }
+                />
+              </div>
+            )}
+
+            {dealershipOptions.length > 0 && (
+              <div className="border-t border-gray-800/60 pt-4">
+                <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Dealership</span>
+                <CheckboxPanel
+                  options={dealershipOptions}
+                  selectedValues={dealershipValues}
+                  onSelectAll={(selected) => setDealershipValues(selected ? dealershipOptions.map((o) => o.value) : [])}
+                  onToggle={(value) =>
+                    setDealershipValues((current) =>
+                      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
+                    )
+                  }
+                />
+              </div>
+            )}
+
+            <div className="border-t border-gray-800/60 pt-4">
+              <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Other</span>
+              <div className="p-1 text-sm text-white">
+                <label className="flex cursor-pointer items-center gap-3 rounded px-2 py-1 text-sm text-white hover:bg-gray-800">
+                  <input
+                    type="checkbox"
+                    checked={newCarsOnly}
+                    onChange={(event) => setNewCarsOnly(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-500 bg-gray-800 text-blue-500 focus:ring-blue-500"
+                  />
+                  <span>Select only new cars</span>
+                </label>
+              </div>
+            </div>
+          </div>
         );
       case "price":
         return (
@@ -346,20 +365,6 @@ export function SidebarFilters({
             onSelect={setSortByValue}
           />
         );
-      case "other":
-        return (
-          <div className="p-1 text-sm text-white">
-            <label className="flex cursor-pointer items-center gap-3 rounded px-2 py-1 text-sm text-white hover:bg-gray-800">
-              <input
-                type="checkbox"
-                checked={newCarsOnly}
-                onChange={(event) => setNewCarsOnly(event.target.checked)}
-                className="h-4 w-4 rounded border-gray-500 bg-gray-800 text-blue-500 focus:ring-blue-500"
-              />
-              <span>Select only new cars</span>
-            </label>
-          </div>
-        );
       default:
         return null;
     }
@@ -378,19 +383,9 @@ export function SidebarFilters({
     <div className="flex h-full min-h-0 flex-col">
       <div className="mt-6 flex max-w-full flex-wrap gap-[2px]">
         <SectionButton
-          label={limiteds.label}
-          active={activeSection === "limiteds"}
-          onClick={() => setActiveSection("limiteds")}
-        />
-        <SectionButton
-          label={gamepasses.label}
-          active={activeSection === "gamepasses"}
-          onClick={() => setActiveSection("gamepasses")}
-        />
-        <SectionButton
-          label={dealerships.label}
-          active={activeSection === "dealerships"}
-          onClick={() => setActiveSection("dealerships")}
+          label="Filters"
+          active={activeSection === "filters"}
+          onClick={() => setActiveSection("filters")}
         />
         <SectionButton
           label={price.label}
@@ -401,11 +396,6 @@ export function SidebarFilters({
           label={sortBy.label}
           active={activeSection === "sortBy"}
           onClick={() => setActiveSection("sortBy")}
-        />
-        <SectionButton
-          label={other.label}
-          active={activeSection === "other"}
-          onClick={() => setActiveSection("other")}
         />
       </div>
 

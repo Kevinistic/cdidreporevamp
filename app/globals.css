@@ -34,3 +34,53 @@ body {
     transform: translateX(-50%);
   }
 }
+
+/* Golden border animation */
+@keyframes spin-border {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.golden-border-spin {
+  position: relative;
+  overflow: hidden;
+  background-color: #0a0a0a;
+  z-index: 0;
+}
+
+.golden-border-spin::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 250%;
+  height: 250%;
+  background: conic-gradient(
+    transparent,
+    rgba(212, 175, 55, 0.2) 20%,
+    #d4af37 50%, /* metallic gold */
+    rgba(212, 175, 55, 0.2) 80%,
+    transparent 100%
+  );
+  animation: spin-border 3s linear infinite;
+  z-index: -2;
+}
+
+.golden-border-spin::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  background-color: #0a0a0a;
+  border-radius: inherit;
+  z-index: -1;
+  transition: background-color 0.2s;
+}
+
+.golden-border-spin:hover::after {
+  background-color: rgb(31, 41, 55);
+}
+

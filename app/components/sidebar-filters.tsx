@@ -32,82 +32,69 @@ function normalizePriceInput(value: string) {
   return value.replace(/\D/g, "");
 }
 
-export type Filters = {
-  limiteds: string[];
-  gamepasses: string[];
-  dealerships: string[];
-  priceRange: PriceRange;
-  sortBy: string;
-  other: string[];
-  newCars: boolean;
+export type FilterState = {
+  included: string[];
+  excluded: string[];
 };
 
-function getAllOptionValues(options: DropdownOption[]) {
-  return options.map((option) => option.value);
-}
+export type Filters = {
+  limiteds: FilterState;
+  gamepasses: FilterState;
+  dealerships: FilterState;
+  priceRange: PriceRange;
+  sortBy: string;
+  other: {
+    newCars: "include" | "exclude" | "neutral";
+  };
+};
 
-function SectionButton({
+function FilterOptionButton({
   label,
-  active,
+  state,
   onClick,
 }: {
   label: string;
-  active: boolean;
+  state: "include" | "exclude" | "neutral";
   onClick: () => void;
 }) {
+  let styleClass = "";
+  if (state === "include") {
+    styleClass = "border-emerald-600 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-900/30";
+  } else if (state === "exclude") {
+    styleClass = "border-rose-600 bg-rose-950/20 text-rose-400 hover:bg-rose-900/30";
+  } else {
+    styleClass = "border-gray-700 bg-gray-900 text-gray-200 hover:bg-gray-800";
+  }
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex shrink-0 w-fit items-center rounded-full border px-3 py-1 text-left text-xs font-medium whitespace-nowrap transition ${
-        active
-          ? "border-gray-700 bg-gray-700 text-white"
-          : "border-gray-700 bg-gray-900 text-gray-200 hover:bg-gray-800"
-      }`}
+      className={`inline-flex shrink-0 w-fit items-center rounded-full border px-3 py-1 text-left text-sm font-medium whitespace-nowrap transition ${styleClass}`}
     >
       <span>{label}</span>
     </button>
   );
 }
 
-function CheckboxPanel({
+function MultistatePanel({
   options,
-  selectedValues,
+  states,
   onToggle,
-  onSelectAll,
 }: {
   options: DropdownOption[];
-  selectedValues: string[];
+  states: Record<string, "include" | "exclude" | "neutral">;
   onToggle: (value: string) => void;
-  onSelectAll: (selected: boolean) => void;
 }) {
-  const allSelected = options.length > 0 && selectedValues.length === options.length;
-
   return (
-    <div className="grid grid-cols-2 gap-2 p-1">
-      <label className="col-span-2 flex cursor-pointer items-center gap-3 rounded px-2 py-1 text-sm text-white hover:bg-gray-800">
-        <input
-          type="checkbox"
-          checked={allSelected}
-          onChange={() => onSelectAll(!allSelected)}
-          className="h-4 w-4 rounded border-gray-500 bg-gray-800 text-blue-500 focus:ring-blue-500"
-        />
-        <span>Select all</span>
-      </label>
-
+    <div className="flex flex-wrap gap-2 p-1">
       {options.map((option) => (
-        <label
+        <FilterOptionButton
           key={option.value}
-          className="flex cursor-pointer items-center gap-3 rounded px-2 py-1 text-sm text-white hover:bg-gray-800"
-        >
-          <input
-            type="checkbox"
-            checked={selectedValues.includes(option.value)}
-            onChange={() => onToggle(option.value)}
-            className="h-4 w-4 rounded border-gray-500 bg-gray-800 text-blue-500 focus:ring-blue-500"
-          />
-          <span>{option.label}</span>
-        </label>
+          label={option.label}
+          state={states[option.value] || "neutral"}
+          onClick={() => onToggle(option.value)}
+        />
       ))}
     </div>
   );
@@ -201,6 +188,43 @@ function buildPriceDropdown(label: string) {
   return { label };
 }
 
+function SectionButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex shrink-0 w-fit items-center rounded-full border px-3 py-1 text-left text-xs font-medium whitespace-nowrap transition ${
+        active
+          ? "border-gray-700 bg-gray-700 text-white"
+          : "border-gray-700 bg-gray-900 text-gray-200 hover:bg-gray-800"
+      }`}
+    >
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function getFilterState(states: Record<string, "include" | "exclude" | "neutral">) {
+  const included: string[] = [];
+  const excluded: string[] = [];
+  for (const [key, value] of Object.entries(states)) {
+    if (value === "include") {
+      included.push(key);
+    } else if (value === "exclude") {
+      excluded.push(key);
+    }
+  }
+  return { included, excluded };
+}
+
 export function SidebarFilters({
   onChange,
   carCount = 0,
@@ -230,38 +254,32 @@ export function SidebarFilters({
     ],
   });
 
-  const [limitedValues, setLimitedValues] = useState<string[]>([]);
-  const [gamepassValues, setGamepassValues] = useState<string[]>([]);
-  const [dealershipValues, setDealershipValues] = useState<string[]>([]);
+  const [limitedStates, setLimitedStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
+  const [gamepassStates, setGamepassStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
+  const [dealershipStates, setDealershipStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [priceRange, setPriceRange] = useState<PriceRange>({ min: "0", max: "180000000000" });
   const [priceInput, setPriceInput] = useState<PriceRange>({ min: "0", max: "180000000000" });
   const [priceFocused, setPriceFocused] = useState<{ min: boolean; max: boolean }>({ min: false, max: false });
   const [sortByValue, setSortByValue] = useState<string>(sortBy.options[3].value);
-  const [otherValues, setOtherValues] = useState<string[]>([]);
-  const [newCarsOnly, setNewCarsOnly] = useState(false);
+  const [newCarsState, setNewCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
 
-  const hasInitializedRef = useRef({ limited: false, gamepass: false, dealership: false });
-
-  useEffect(() => {
-    if (limitedOptions.length > 0 && !hasInitializedRef.current.limited) {
-      setLimitedValues(limitedOptions.map((o) => o.value));
-      hasInitializedRef.current.limited = true;
-    }
-  }, [limitedOptions]);
-
-  useEffect(() => {
-    if (gamepassOptions.length > 0 && !hasInitializedRef.current.gamepass) {
-      setGamepassValues(gamepassOptions.map((o) => o.value));
-      hasInitializedRef.current.gamepass = true;
-    }
-  }, [gamepassOptions]);
-
-  useEffect(() => {
-    if (dealershipOptions.length > 0 && !hasInitializedRef.current.dealership) {
-      setDealershipValues(dealershipOptions.map((o) => o.value));
-      hasInitializedRef.current.dealership = true;
-    }
-  }, [dealershipOptions]);
+  const toggleOption = (
+    setStates: React.Dispatch<React.SetStateAction<Record<string, "include" | "exclude" | "neutral">>>,
+    value: string
+  ) => {
+    setStates((current) => {
+      const currentState = current[value] || "neutral";
+      let nextState: "include" | "exclude" | "neutral" = "neutral";
+      if (currentState === "neutral") {
+        nextState = "include";
+      } else if (currentState === "include") {
+        nextState = "exclude";
+      } else {
+        nextState = "neutral";
+      }
+      return { ...current, [value]: nextState };
+    });
+  };
 
   const activeContent = (() => {
     switch (activeSection) {
@@ -271,15 +289,10 @@ export function SidebarFilters({
             {limitedOptions.length > 0 && (
               <div>
                 <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Limited</span>
-                <CheckboxPanel
+                <MultistatePanel
                   options={limitedOptions}
-                  selectedValues={limitedValues}
-                  onSelectAll={(selected) => setLimitedValues(selected ? limitedOptions.map((o) => o.value) : [])}
-                  onToggle={(value) =>
-                    setLimitedValues((current) =>
-                      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
-                    )
-                  }
+                  states={limitedStates}
+                  onToggle={(value) => toggleOption(setLimitedStates, value)}
                 />
               </div>
             )}
@@ -287,15 +300,10 @@ export function SidebarFilters({
             {gamepassOptions.length > 0 && (
               <div className="border-t border-gray-800/60 pt-4">
                 <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Gamepass</span>
-                <CheckboxPanel
+                <MultistatePanel
                   options={gamepassOptions}
-                  selectedValues={gamepassValues}
-                  onSelectAll={(selected) => setGamepassValues(selected ? gamepassOptions.map((o) => o.value) : [])}
-                  onToggle={(value) =>
-                    setGamepassValues((current) =>
-                      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
-                    )
-                  }
+                  states={gamepassStates}
+                  onToggle={(value) => toggleOption(setGamepassStates, value)}
                 />
               </div>
             )}
@@ -303,31 +311,28 @@ export function SidebarFilters({
             {dealershipOptions.length > 0 && (
               <div className="border-t border-gray-800/60 pt-4">
                 <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Dealership</span>
-                <CheckboxPanel
+                <MultistatePanel
                   options={dealershipOptions}
-                  selectedValues={dealershipValues}
-                  onSelectAll={(selected) => setDealershipValues(selected ? dealershipOptions.map((o) => o.value) : [])}
-                  onToggle={(value) =>
-                    setDealershipValues((current) =>
-                      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
-                    )
-                  }
+                  states={dealershipStates}
+                  onToggle={(value) => toggleOption(setDealershipStates, value)}
                 />
               </div>
             )}
 
             <div className="border-t border-gray-800/60 pt-4">
               <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Other</span>
-              <div className="p-1 text-sm text-white">
-                <label className="flex cursor-pointer items-center gap-3 rounded px-2 py-1 text-sm text-white hover:bg-gray-800">
-                  <input
-                    type="checkbox"
-                    checked={newCarsOnly}
-                    onChange={(event) => setNewCarsOnly(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-500 bg-gray-800 text-blue-500 focus:ring-blue-500"
-                  />
-                  <span>Select only new cars</span>
-                </label>
+              <div className="flex flex-wrap gap-2 p-1">
+                <FilterOptionButton
+                  label="New"
+                  state={newCarsState}
+                  onClick={() => {
+                    setNewCarsState((current) => {
+                      if (current === "neutral") return "include";
+                      if (current === "include") return "exclude";
+                      return "neutral";
+                    });
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -376,8 +381,17 @@ export function SidebarFilters({
   }, [onChange]);
 
   useEffect(() => {
-    onChangeRef.current?.({ limiteds: limitedValues, gamepasses: gamepassValues, dealerships: dealershipValues, priceRange, sortBy: sortByValue, other: otherValues, newCars: newCarsOnly });
-  }, [limitedValues, gamepassValues, dealershipValues, priceRange, sortByValue, otherValues, newCarsOnly]);
+    onChangeRef.current?.({
+      limiteds: getFilterState(limitedStates),
+      gamepasses: getFilterState(gamepassStates),
+      dealerships: getFilterState(dealershipStates),
+      priceRange,
+      sortBy: sortByValue,
+      other: {
+        newCars: newCarsState,
+      },
+    });
+  }, [limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, newCarsState]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">

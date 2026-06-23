@@ -65,26 +65,43 @@ export function CardsGrid({
     // Sidebar Filters
     if (filters) {
       // Dealership options filter
-      if (filters.dealerships && filters.dealerships.length > 0) {
-        result = result.filter((card) =>
-          filters.dealerships.includes(card.Dealership)
-        );
+      if (filters.dealerships) {
+        const { included, excluded } = filters.dealerships;
+        if (included && included.length > 0) {
+          result = result.filter((card) => included.includes(card.Dealership));
+        }
+        if (excluded && excluded.length > 0) {
+          result = result.filter((card) => !excluded.includes(card.Dealership));
+        }
       }
       // Limited status filter
-      if (filters.limiteds && filters.limiteds.length > 0) {
-        result = result.filter((card) =>
-          filters.limiteds.includes(card.Limited)
-        );
+      if (filters.limiteds) {
+        const { included, excluded } = filters.limiteds;
+        if (included && included.length > 0) {
+          result = result.filter((card) => included.includes(card.Limited));
+        }
+        if (excluded && excluded.length > 0) {
+          result = result.filter((card) => !excluded.includes(card.Limited));
+        }
       }
       // Gamepass options filter
-      if (filters.gamepasses && filters.gamepasses.length > 0) {
-        result = result.filter((card) =>
-          filters.gamepasses.includes(card.Gamepass)
-        );
+      if (filters.gamepasses) {
+        const { included, excluded } = filters.gamepasses;
+        if (included && included.length > 0) {
+          result = result.filter((card) => included.includes(card.Gamepass));
+        }
+        if (excluded && excluded.length > 0) {
+          result = result.filter((card) => !excluded.includes(card.Gamepass));
+        }
       }
       // New cars filter
-      if (filters.newCars) {
-        result = result.filter((card) => card.New);
+      if (filters.other && filters.other.newCars) {
+        const newCarsState = filters.other.newCars;
+        if (newCarsState === "include") {
+          result = result.filter((card) => card.New);
+        } else if (newCarsState === "exclude") {
+          result = result.filter((card) => !card.New);
+        }
       }
       // Price range filter
       if (filters.priceRange) {

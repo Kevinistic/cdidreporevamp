@@ -103,6 +103,15 @@ export function CardsGrid({
           result = result.filter((card) => !card.New);
         }
       }
+      // Legacy cars filter
+      if (filters.other && filters.other.legacyCars) {
+        const legacyCarsState = filters.other.legacyCars;
+        if (legacyCarsState === "include") {
+          result = result.filter((card) => card.Legacy);
+        } else if (legacyCarsState === "exclude") {
+          result = result.filter((card) => !card.Legacy);
+        }
+      }
       // Price range filter
       if (filters.priceRange) {
         const minVal = parseFloat(filters.priceRange.min);

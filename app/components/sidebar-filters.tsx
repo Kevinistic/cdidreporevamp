@@ -45,6 +45,7 @@ export type Filters = {
   sortBy: string;
   other: {
     newCars: "include" | "exclude" | "neutral";
+    legacyCars: "include" | "exclude" | "neutral";
   };
 };
 
@@ -262,6 +263,7 @@ export function SidebarFilters({
   const [priceFocused, setPriceFocused] = useState<{ min: boolean; max: boolean }>({ min: false, max: false });
   const [sortByValue, setSortByValue] = useState<string>(sortBy.options[3].value);
   const [newCarsState, setNewCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
+  const [legacyCarsState, setLegacyCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
 
   const toggleOption = (
     setStates: React.Dispatch<React.SetStateAction<Record<string, "include" | "exclude" | "neutral">>>,
@@ -333,6 +335,17 @@ export function SidebarFilters({
                     });
                   }}
                 />
+                <FilterOptionButton
+                  label="Removed"
+                  state={legacyCarsState}
+                  onClick={() => {
+                    setLegacyCarsState((current) => {
+                      if (current === "neutral") return "include";
+                      if (current === "include") return "exclude";
+                      return "neutral";
+                    });
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -389,9 +402,10 @@ export function SidebarFilters({
       sortBy: sortByValue,
       other: {
         newCars: newCarsState,
+        legacyCars: legacyCarsState,
       },
     });
-  }, [limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, newCarsState]);
+  }, [limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, newCarsState, legacyCarsState]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">

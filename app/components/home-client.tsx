@@ -12,6 +12,8 @@ import { Credits } from "./credits";
 export default function HomeClient() {
   const pageStartRef = useRef(performance.now());
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [isTransitionEnabled, setIsTransitionEnabled] = useState(false);
+  const [hasClickedFilter, setHasClickedFilter] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<Filters | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,6 +23,27 @@ export default function HomeClient() {
   const [buildSeconds, setBuildSeconds] = useState<number | null>(null);
   const [allCars, setAllCars] = useState<CardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // 1. Closed by default on mobile (breakpoint 768px matches Tailwind md)
+    if (window.innerWidth < 768) {
+      setIsSidebarVisible(false);
+    }
+    // 2. Enable transitions after a brief delay to prevent slide on mount
+    const transitionTimer = setTimeout(() => {
+      setIsTransitionEnabled(true);
+    }, 100);
+
+    // 3. Read clicked status from localStorage
+    const clicked = localStorage.getItem("cdid_filter_clicked");
+    if (!clicked) {
+      setHasClickedFilter(false);
+    }
+
+    return () => {
+      clearTimeout(transitionTimer);
+    };
+  }, []);
 
   const pageSize = 40;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -89,14 +112,21 @@ export default function HomeClient() {
     };
   }, [allCars]);
 
+  const handleFilterClick = () => {
+    setIsSidebarVisible((current) => !current);
+    if (!hasClickedFilter) {
+      setHasClickedFilter(true);
+      localStorage.setItem("cdid_filter_clicked", "true");
+    }
+  };
 
   return (
     <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
       <aside
         className={
           isSidebarVisible
-            ? "fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md transition-transform duration-200 md:left-0 md:top-0 md:h-full md:w-80 md:border-r md:border-gray-700 bottom-0 left-0 right-0 h-[70vh] border-t border-gray-700 md:border-t-0"
-            : "fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md transition-transform duration-200 md:-translate-x-full md:pointer-events-none bottom-0 left-0 right-0 h-[70vh] border-t border-gray-700 translate-y-full md:translate-y-0 md:border-t-0"
+            ? `fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md ${isTransitionEnabled ? "transition-transform duration-200" : ""} md:left-0 md:top-0 md:h-full md:w-80 md:border-r md:border-gray-700 bottom-0 left-0 right-0 h-[70vh] border-t border-gray-700 md:border-t-0`
+            : `fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md ${isTransitionEnabled ? "transition-transform duration-200" : ""} md:-translate-x-full md:pointer-events-none bottom-0 left-0 right-0 h-[70vh] border-t border-gray-700 translate-y-full md:translate-y-0 md:border-t-0`
         }
       >
         <div className="flex h-full w-full flex-col">
@@ -135,18 +165,24 @@ export default function HomeClient() {
       <main
         className={
           isSidebarVisible
-            ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden transition-[padding-left,padding-bottom] duration-200 md:pl-80 md:pb-0 pl-0 pb-[70vh]"
-            : "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden transition-[padding-left,padding-bottom] duration-200 md:pl-0 md:pb-0 pl-0 pb-0"
+            ? `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${isTransitionEnabled ? "transition-[padding-left,padding-bottom] duration-200" : ""} md:pl-80 md:pb-0 pl-0 pb-[70vh]`
+            : `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${isTransitionEnabled ? "transition-[padding-left,padding-bottom] duration-200" : ""} md:pl-0 md:pb-0 pl-0 pb-0`
         }
       >
         <header className="flex h-16 items-center justify-between border-b border-gray-700 px-2">
           <button
             type="button"
-            onClick={() => setIsSidebarVisible((current) => !current)}
+            onClick={handleFilterClick}
             aria-expanded={isSidebarVisible}
-            className="rounded-md border border-gray-500 px-2 py-2 text-sm text-white hover:bg-gray-800"
+            className={
+              hasClickedFilter
+                ? "rounded-md border border-gray-500 px-2 py-2 text-sm text-white hover:bg-gray-800"
+                : "golden-border-spin rounded-md px-2 py-2 text-sm text-white hover:bg-gray-800"
+            }
           >
-            <SlidersHorizontal size={16} />
+            <span className="relative z-10 flex items-center justify-center">
+              <SlidersHorizontal size={16} />
+            </span>
           </button>
 
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />

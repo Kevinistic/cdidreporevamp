@@ -15,6 +15,7 @@ export default function HomeClient() {
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(false);
   const [hasClickedFilter, setHasClickedFilter] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const sidebarFiltersRef = useRef<{ reset: () => void }>(null);
   const [filters, setFilters] = useState<Filters | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -120,6 +121,11 @@ export default function HomeClient() {
     }
   };
 
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    sidebarFiltersRef.current?.reset();
+  };
+
   return (
     <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
       <aside
@@ -133,17 +139,25 @@ export default function HomeClient() {
           <span className="text-xs uppercase tracking-[0.2em]">CDID Car Database (Unofficial)</span>
 
           {/* search bar */}
-          <div className="mt-6">
+          <div className="mt-6 flex w-full gap-2">
             <input
               type="text"
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-72 rounded-md bg-gray-900 px-4 py-2 text-white focus:bg-gray-800 focus:outline-none"
+              className="min-w-0 flex-1 rounded-md bg-gray-900 px-4 py-2 text-white focus:bg-gray-800 focus:outline-none"
             />
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="flex items-center justify-center shrink-0 rounded-md bg-red-950 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-900"
+            >
+              Reset
+            </button>
           </div>
 
           <SidebarFilters
+            ref={sidebarFiltersRef}
             onChange={(f) => setFilters(f)}
             carCount={totalItems}
             buildSeconds={buildSeconds ?? 0}

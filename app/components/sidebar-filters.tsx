@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 type DropdownOption = {
   label: string;
@@ -13,6 +13,9 @@ type PriceRange = {
   min: string;
   max: string;
 };
+
+const DEFAULT_PRICE_RANGE: PriceRange = { min: "0", max: "180000000000" };
+const DEFAULT_SORT_BY = "price-desc";
 
 type DropdownConfig = {
   label: string;
@@ -47,6 +50,19 @@ export type Filters = {
     newCars: "include" | "exclude" | "neutral";
     legacyCars: "include" | "exclude" | "neutral";
   };
+};
+
+export type SidebarFiltersHandle = {
+  reset: () => void;
+};
+
+type SidebarFiltersProps = {
+  onChange?: (filters: Filters) => void;
+  carCount?: number;
+  buildSeconds?: number;
+  dealershipOptions?: DropdownOption[];
+  limitedOptions?: DropdownOption[];
+  gamepassOptions?: DropdownOption[];
 };
 
 function FilterOptionButton({
@@ -226,21 +242,14 @@ function getFilterState(states: Record<string, "include" | "exclude" | "neutral"
   return { included, excluded };
 }
 
-export function SidebarFilters({
+export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersProps>(function SidebarFilters({
   onChange,
   carCount = 0,
   buildSeconds = 0,
   dealershipOptions = [],
   limitedOptions = [],
   gamepassOptions = [],
-}: {
-  onChange?: (filters: Filters) => void;
-  carCount?: number;
-  buildSeconds?: number;
-  dealershipOptions?: DropdownOption[];
-  limitedOptions?: DropdownOption[];
-  gamepassOptions?: DropdownOption[];
-}) {
+}, ref) {
   const [activeSection, setActiveSection] = useState<SectionKey>("filters");
 
   const price = buildPriceDropdown("Price");
@@ -258,12 +267,27 @@ export function SidebarFilters({
   const [limitedStates, setLimitedStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [gamepassStates, setGamepassStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [dealershipStates, setDealershipStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
-  const [priceRange, setPriceRange] = useState<PriceRange>({ min: "0", max: "180000000000" });
-  const [priceInput, setPriceInput] = useState<PriceRange>({ min: "0", max: "180000000000" });
+  const [priceRange, setPriceRange] = useState<PriceRange>(DEFAULT_PRICE_RANGE);
+  const [priceInput, setPriceInput] = useState<PriceRange>(DEFAULT_PRICE_RANGE);
   const [priceFocused, setPriceFocused] = useState<{ min: boolean; max: boolean }>({ min: false, max: false });
-  const [sortByValue, setSortByValue] = useState<string>(sortBy.options[3].value);
+  const [sortByValue, setSortByValue] = useState<string>(DEFAULT_SORT_BY);
   const [newCarsState, setNewCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
   const [legacyCarsState, setLegacyCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
+
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      setActiveSection("filters");
+      setLimitedStates({});
+      setGamepassStates({});
+      setDealershipStates({});
+      setPriceRange(DEFAULT_PRICE_RANGE);
+      setPriceInput(DEFAULT_PRICE_RANGE);
+      setPriceFocused({ min: false, max: false });
+      setSortByValue(DEFAULT_SORT_BY);
+      setNewCarsState("neutral");
+      setLegacyCarsState("neutral");
+    },
+  }));
 
   const toggleOption = (
     setStates: React.Dispatch<React.SetStateAction<Record<string, "include" | "exclude" | "neutral">>>,
@@ -447,4 +471,4 @@ export function SidebarFilters({
       </div>
     </div>
   );
-}
+});

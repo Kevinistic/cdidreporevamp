@@ -15,6 +15,9 @@ export type CardItem = {
   Inaccurate: boolean;
   Rims: string;
   New: boolean;
+  event: boolean;
+  lostmedia: boolean;
+  minigame: boolean;
 };
 
 export default null;

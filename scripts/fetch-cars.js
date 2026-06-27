@@ -36,7 +36,7 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
-const CARD_SELECT_COLUMNS = `_id,CarName,Cost,CarImageUrl,Dealership,Limited,Gamepass,Engine,RimsUrl,rgb_0,rgb_1,rgb_2,Legacy,Inaccurate,Rims,New`;
+const CARD_SELECT_COLUMNS = `_id,CarName,Cost,CarImageUrl,Dealership,Limited,Gamepass,Engine,RimsUrl,rgb_0,rgb_1,rgb_2,Legacy,Inaccurate,Rims,New,event,lostmedia,minigame`;
 
 async function fetchAllCars() {
   console.log("Starting build-time cars data fetch...");
@@ -84,13 +84,15 @@ async function run() {
       console.warn("Warning: Fetched 0 cars from Supabase.");
     }
 
-    const normalizedCars = cars.map((car) => {
-      const priceValue = car.Price ?? car.Cost ?? 0;
-      return {
-        ...car,
-        Price: typeof priceValue === "number" ? priceValue : Number(String(priceValue).replace(/[^0-9.-]/g, "")) || 0,
-      };
-    });
+    const normalizedCars = cars
+      .filter((car) => !car.lostmedia)
+      .map((car) => {
+        const priceValue = car.Price ?? car.Cost ?? 0;
+        return {
+          ...car,
+          Price: typeof priceValue === "number" ? priceValue : Number(String(priceValue).replace(/[^0-9.-]/g, "")) || 0,
+        };
+      });
 
     const dir = path.join(process.cwd(), "public", "data");
     if (!fs.existsSync(dir)) {

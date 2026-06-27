@@ -48,6 +48,8 @@ export type Filters = {
   sortBy: string;
   other: {
     newCars: "include" | "exclude" | "neutral";
+    eventCars: "include" | "exclude" | "neutral";
+    minigameCars: "include" | "exclude" | "neutral";
     legacyCars: "include" | "exclude" | "neutral";
   };
 };
@@ -272,6 +274,8 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
   const [priceFocused, setPriceFocused] = useState<{ min: boolean; max: boolean }>({ min: false, max: false });
   const [sortByValue, setSortByValue] = useState<string>(DEFAULT_SORT_BY);
   const [newCarsState, setNewCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
+  const [eventCarsState, setEventCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
+  const [minigameCarsState, setMinigameCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
   const [legacyCarsState, setLegacyCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
 
   useImperativeHandle(ref, () => ({
@@ -285,6 +289,8 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
       setPriceFocused({ min: false, max: false });
       setSortByValue(DEFAULT_SORT_BY);
       setNewCarsState("neutral");
+      setEventCarsState("neutral");
+      setMinigameCarsState("neutral");
       setLegacyCarsState("neutral");
     },
   }));
@@ -360,6 +366,28 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
                   }}
                 />
                 <FilterOptionButton
+                  label="Event"
+                  state={eventCarsState}
+                  onClick={() => {
+                    setEventCarsState((current) => {
+                      if (current === "neutral") return "include";
+                      if (current === "include") return "exclude";
+                      return "neutral";
+                    });
+                  }}
+                />
+                <FilterOptionButton
+                  label="Minigame"
+                  state={minigameCarsState}
+                  onClick={() => {
+                    setMinigameCarsState((current) => {
+                      if (current === "neutral") return "include";
+                      if (current === "include") return "exclude";
+                      return "neutral";
+                    });
+                  }}
+                />
+                <FilterOptionButton
                   label="Removed"
                   state={legacyCarsState}
                   onClick={() => {
@@ -426,10 +454,12 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
       sortBy: sortByValue,
       other: {
         newCars: newCarsState,
+        eventCars: eventCarsState,
+        minigameCars: minigameCarsState,
         legacyCars: legacyCarsState,
       },
     });
-  }, [limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, newCarsState, legacyCarsState]);
+  }, [limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, newCarsState, eventCarsState, minigameCarsState, legacyCarsState]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">

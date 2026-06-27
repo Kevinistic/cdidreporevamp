@@ -103,6 +103,24 @@ export function CardsGrid({
           result = result.filter((card) => !card.New);
         }
       }
+      // Event cars filter
+      if (filters.other && filters.other.eventCars) {
+        const eventCarsState = filters.other.eventCars;
+        if (eventCarsState === "include") {
+          result = result.filter((card) => card.event);
+        } else if (eventCarsState === "exclude") {
+          result = result.filter((card) => !card.event);
+        }
+      }
+      // Minigame cars filter
+      if (filters.other && filters.other.minigameCars) {
+        const minigameCarsState = filters.other.minigameCars;
+        if (minigameCarsState === "include") {
+          result = result.filter((card) => card.minigame);
+        } else if (minigameCarsState === "exclude") {
+          result = result.filter((card) => !card.minigame);
+        }
+      }
       // Legacy cars filter
       if (filters.other && filters.other.legacyCars) {
         const legacyCarsState = filters.other.legacyCars;

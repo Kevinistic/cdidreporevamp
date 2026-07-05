@@ -201,17 +201,31 @@ export default function HomeClient() {
 
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
 
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedCard(null);
-              setIsCreditsVisible(true);
-            }}
-            aria-expanded={isCreditsVisible}
-            className="rounded-md border border-gray-500 px-2 py-2 text-sm text-white hover:bg-gray-800"
-          >
-            <ScrollText size={16} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.open("https://discord.gg/QPMguJNTsG", "_blank")}
+              className="rounded-md border border-gray-500 px-2 py-2 text-sm text-white hover:bg-gray-800 aspect-square"
+            >
+              <img 
+                src="/discord.svg"
+                width="16" 
+                height="16" 
+              />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCard(null);
+                setIsCreditsVisible(true);
+              }}
+              aria-expanded={isCreditsVisible}
+              className="rounded-md border border-gray-500 px-2 py-2 text-sm text-white hover:bg-gray-800"
+            >
+              <ScrollText size={16} />
+            </button>
+          </div>
         </header>
         
         <CardsGrid

@@ -100,39 +100,6 @@ export function MainCard({ card, onBack }: MainCardProps) {
 											className="object-contain"
 										/>
 									</div>
-
-									<div className="hidden h-1/2 w-full flex">
-										<div className="flex-1 flex items-center justify-center p-2">
-											{card.RimsUrl ? (
-												<div className="flex w-full flex-col items-center">
-													<div className="relative aspect-square w-full max-w-[160px]">
-														<Image
-															src={card.RimsUrl}
-															alt={`${card.CarName} rims`}
-															fill
-															sizes="(max-width: 768px) 45vw, 200px"
-															className="object-contain"
-														/>
-													</div>
-													<span className="sr-only">Rims image</span>
-													<p className="mt-1 text-xs text-gray-400 break-all">{`Code: ${rimsCode ? rimsCode[0] : 'N/A'}`}</p>
-												</div>
-
-											) : (
-												<div className="h-full w-full flex items-center justify-center text-sm text-gray-400">No rims</div>
-											)}
-										</div>
-
-										<div className="flex-1 p-2">
-											<div className="w-full max-w-[160px] aspect-square rounded-md border border-gray-600 overflow-hidden mx-auto"
-												style={{
-													backgroundColor: `rgb(${card.rgb_0 ?? 0}, ${card.rgb_1 ?? 0}, ${card.rgb_2 ?? 0})`,
-												}}
-											>
-											</div>
-											<p className="mt-2 text-xs text-gray-400 break-all">{`Code: ${hexCode}`}</p>
-										</div>
-									</div>
 								</div>
 							</div>
 						) : null}

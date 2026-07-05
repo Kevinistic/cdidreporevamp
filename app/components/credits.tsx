@@ -24,10 +24,10 @@ function CreditsButton({ title, desc, label, href }: CreditsButtonProps) {
 			<button
 				type="button"
 				onClick={() => window.open(href, "_blank")}
-				className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-full border border-gray-700 bg-gray-900 px-3 py-1 text-left text-xs font-medium whitespace-nowrap transition hover:bg-gray-800"
+				className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1 text-left text-xs text-gray-500 font-medium whitespace-nowrap transition hover:text-gray-300"
 			>
 				<span>{label}</span>
-				<SquareArrowOutUpRight size={16} color="#6B7280" />
+				<SquareArrowOutUpRight size={16} />
 			</button>
 		</div>
     );
@@ -47,11 +47,11 @@ export function Credits({ onBack }: CreditsProps) {
                         Credits
                     </p>
 
-					<CreditsButton 
-                        title="CDID" 
-                        desc="Car Driving Indonesia Roblox Game"
-                        label="CDID Roblox Page" 
-                        href="https://www.roblox.com/games/6911148748/Car-Driving-Indonesia" />
+					<div className="flex max-w-full flex-col gap-2">
+						<CreditsButton title="CDID Roblox" desc="Car Driving Indonesia Roblox Game" label="roblox.com" href="https://www.roblox.com/games/6911148748/Car-Driving-Indonesia" />
+						<CreditsButton title="CDID Wiki" desc="Car Driving Indonesia Wiki" label="cardrivingindonesia.fandom.com" href="https://cardrivingindonesia.fandom.com/wiki/CDID_Wiki" />
+						<CreditsButton title="CDID Discord" desc="Car Driving Indonesia Discord Server" label="discord.gg" href="https://discord.gg/cdid" />
+					</div>
 
 					<p className="text-xs uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
                         <CodeXml size={16} className="inline-block"/>
@@ -59,11 +59,11 @@ export function Credits({ onBack }: CreditsProps) {
                     </p>
 
 					<div className="flex max-w-full flex-col gap-2">
-						<CreditsButton title="Next.js" desc="The React Framework for Production" label="Next.js" href="https://nextjs.org/" />
-						<CreditsButton title="React" desc="A JavaScript library for building user interfaces" label="React" href="https://react.dev/" />
-						<CreditsButton title="TypeScript" desc="JavaScript with syntax for types" label="TypeScript" href="https://www.typescriptlang.org/" />
-						<CreditsButton title="Tailwind CSS" desc="A utility-first CSS framework" label="Tailwind CSS" href="https://tailwindcss.com/" />
-						<CreditsButton title="Lucide Icons" desc="A collection of free, open-source icons" label="Lucide Icons" href="https://lucide.dev/" />
+						<CreditsButton title="Next.js" desc="The React Framework for Production" label="nextjs.org" href="https://nextjs.org/" />
+						<CreditsButton title="React" desc="A JavaScript library for building user interfaces" label="react.dev" href="https://react.dev/" />
+						<CreditsButton title="TypeScript" desc="JavaScript with syntax for types" label="typescriptlang.org" href="https://www.typescriptlang.org/" />
+						<CreditsButton title="Tailwind CSS" desc="A utility-first CSS framework" label="tailwindcss.com" href="https://tailwindcss.com/" />
+						<CreditsButton title="Lucide Icons" desc="A collection of free, open-source icons" label="lucide.dev" href="https://lucide.dev/" />
 					</div>
 
                     <p className="text-xs uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
@@ -72,7 +72,7 @@ export function Credits({ onBack }: CreditsProps) {
                     </p>
 
 					<div className="flex max-w-full flex-col gap-2">
-                        <CreditsButton title="aoderu" desc="Design & Development" label="aoderu" href="https://guns.lol/aoderu" />
+                        <CreditsButton title="aoderu" desc="Design & Development" label="guns.lol" href="https://guns.lol/aoderu" />
                     </div>
                 </div>
             </section>

@@ -182,12 +182,19 @@ export function CardsGrid({
     >
       {isLoading ? <p className="mb-2 text-xs uppercase tracking-[0.2em] text-zinc-500">Loading page...</p> : null}
       <div className="grid gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {pagedRows.map((card) => (
-          <button
-            key={card._id}
-            type="button"
-            onClick={() => onCardClick?.(card)}
-            className="flex h-full flex-col justify-between rounded-lg border border-zinc-700 p-2 text-white shadow-sm hover:bg-zinc-800"
+        {pagedRows.map((card) => {
+          let buttonBg = "bg-zinc-950";
+
+          if (card.Legacy) {
+            buttonBg = "bg-[#230405]"; // red-950 50%
+          }
+
+          return (
+            <button
+              key={card._id}
+              type="button"
+              onClick={() => onCardClick?.(card)}
+              className={`flex h-full flex-col justify-between rounded-lg border border-zinc-700 hover:border-zinc-500 p-2 text-white shadow-sm ${buttonBg}`}
           >
             <div>
               <p className="text-sm font-bold text-center">{card.CarName}</p>
@@ -205,7 +212,8 @@ export function CardsGrid({
               </div>
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

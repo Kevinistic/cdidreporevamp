@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type DropdownOption = {
   label: string;
@@ -41,6 +41,7 @@ export type FilterState = {
 };
 
 export type Filters = {
+  search: string;
   limiteds: FilterState;
   gamepasses: FilterState;
   dealerships: FilterState;
@@ -52,10 +53,6 @@ export type Filters = {
     minigameCars: "include" | "exclude" | "neutral";
     legacyCars: "include" | "exclude" | "neutral";
   };
-};
-
-export type SidebarFiltersHandle = {
-  reset: () => void;
 };
 
 type SidebarFiltersProps = {
@@ -82,7 +79,7 @@ function FilterOptionButton({
   } else if (state === "exclude") {
     styleClass = "border-rose-600 bg-rose-950/20 text-rose-400 hover:bg-rose-900/30";
   } else {
-    styleClass = "border-gray-700 bg-gray-900 text-gray-200 hover:bg-gray-800";
+    styleClass = "border-zinc-700 bg-zinc-900 text-zinc-200 hover:bg-zinc-800";
   }
 
   return (
@@ -141,7 +138,7 @@ function PricePanel({
   return (
     <div className="space-y-3 p-1 text-sm text-white">
       <label className="block space-y-2">
-        <span className="block text-gray-300">Min:</span>
+        <span className="block text-zinc-300">Min:</span>
         <input
           type="text"
           value={minPrice}
@@ -149,12 +146,12 @@ function PricePanel({
           onBlur={onMinBlur}
           onChange={(event) => onMinChange(normalizePriceInput(event.target.value))}
           placeholder="Enter minimum"
-          className="w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </label>
 
       <label className="block space-y-2">
-        <span className="block text-gray-300">Max:</span>
+        <span className="block text-zinc-300">Max:</span>
         <input
           type="text"
           value={maxPrice}
@@ -162,7 +159,7 @@ function PricePanel({
           onBlur={onMaxBlur}
           onChange={(event) => onMaxChange(normalizePriceInput(event.target.value))}
           placeholder="Enter maximum"
-          className="w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </label>
     </div>
@@ -183,14 +180,14 @@ function RadioPanel({
       {options.map((option) => (
         <label
           key={option.value}
-          className="flex cursor-pointer items-center gap-3 rounded px-2 py-1 text-sm text-white hover:bg-gray-800"
+          className="flex cursor-pointer items-center gap-3 rounded px-2 py-1 text-sm text-white hover:bg-zinc-800"
         >
           <input
             type="radio"
             name="sort-by"
             checked={selectedValue === option.value}
             onChange={() => onSelect(option.value)}
-            className="h-4 w-4 border-gray-500 bg-gray-800 text-blue-500 focus:ring-blue-500"
+            className="h-4 w-4 border-zinc-500 bg-zinc-800 text-blue-500 focus:ring-blue-500"
           />
           <span>{option.label}</span>
         </label>
@@ -220,10 +217,10 @@ function SectionButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex shrink-0 w-fit items-center rounded-full border px-3 py-1 text-left text-xs font-medium whitespace-nowrap transition ${
+      className={`shrink-0 w-full items-center px-4 py-2 text-center text-xs font-medium whitespace-nowrap transition ${
         active
-          ? "border-gray-700 bg-gray-700 text-white"
-          : "border-gray-700 bg-gray-900 text-gray-200 hover:bg-gray-800"
+          ? "bg-zinc-700 text-white"
+          : "bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
       }`}
     >
       <span>{label}</span>
@@ -244,14 +241,14 @@ function getFilterState(states: Record<string, "include" | "exclude" | "neutral"
   return { included, excluded };
 }
 
-export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersProps>(function SidebarFilters({
+export function SidebarFilters({
   onChange,
   carCount = 0,
   buildSeconds = 0,
   dealershipOptions = [],
   limitedOptions = [],
   gamepassOptions = [],
-}, ref) {
+}: SidebarFiltersProps) {
   const [activeSection, setActiveSection] = useState<SectionKey>("filters");
 
   const price = buildPriceDropdown("Price");
@@ -266,6 +263,7 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
     ],
   });
 
+  const [searchQuery, setSearchQuery] = useState("");
   const [limitedStates, setLimitedStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [gamepassStates, setGamepassStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [dealershipStates, setDealershipStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
@@ -278,22 +276,21 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
   const [minigameCarsState, setMinigameCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
   const [legacyCarsState, setLegacyCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
 
-  useImperativeHandle(ref, () => ({
-    reset: () => {
-      setActiveSection("filters");
-      setLimitedStates({});
-      setGamepassStates({});
-      setDealershipStates({});
-      setPriceRange(DEFAULT_PRICE_RANGE);
-      setPriceInput(DEFAULT_PRICE_RANGE);
-      setPriceFocused({ min: false, max: false });
-      setSortByValue(DEFAULT_SORT_BY);
-      setNewCarsState("neutral");
-      setEventCarsState("neutral");
-      setMinigameCarsState("neutral");
-      setLegacyCarsState("neutral");
-    },
-  }));
+  const handleReset = () => {
+    setActiveSection("filters");
+    setSearchQuery("");
+    setLimitedStates({});
+    setGamepassStates({});
+    setDealershipStates({});
+    setPriceRange(DEFAULT_PRICE_RANGE);
+    setPriceInput(DEFAULT_PRICE_RANGE);
+    setPriceFocused({ min: false, max: false });
+    setSortByValue(DEFAULT_SORT_BY);
+    setNewCarsState("neutral");
+    setEventCarsState("neutral");
+    setMinigameCarsState("neutral");
+    setLegacyCarsState("neutral");
+  };
 
   const toggleOption = (
     setStates: React.Dispatch<React.SetStateAction<Record<string, "include" | "exclude" | "neutral">>>,
@@ -320,7 +317,7 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
           <div className="space-y-6">
             {limitedOptions.length > 0 && (
               <div>
-                <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Limited</span>
+                <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Limited</span>
                 <MultistatePanel
                   options={limitedOptions}
                   states={limitedStates}
@@ -330,8 +327,8 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
             )}
 
             {gamepassOptions.length > 0 && (
-              <div className="border-t border-gray-800/60 pt-4">
-                <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Gamepass</span>
+              <div className="border-t border-zinc-800/60 pt-4">
+                <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Gamepass</span>
                 <MultistatePanel
                   options={gamepassOptions}
                   states={gamepassStates}
@@ -341,8 +338,8 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
             )}
 
             {dealershipOptions.length > 0 && (
-              <div className="border-t border-gray-800/60 pt-4">
-                <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Dealership</span>
+              <div className="border-t border-zinc-800/60 pt-4">
+                <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Dealership</span>
                 <MultistatePanel
                   options={dealershipOptions}
                   states={dealershipStates}
@@ -351,8 +348,8 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
               </div>
             )}
 
-            <div className="border-t border-gray-800/60 pt-4">
-              <span className="block text-gray-300 text-xs uppercase tracking-[0.2em] mb-2">Other</span>
+            <div className="border-t border-zinc-800/60 pt-4">
+              <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Other</span>
               <div className="flex flex-wrap gap-2 p-1">
                 <FilterOptionButton
                   label="New"
@@ -447,6 +444,7 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
 
   useEffect(() => {
     onChangeRef.current?.({
+      search: searchQuery,
       limiteds: getFilterState(limitedStates),
       gamepasses: getFilterState(gamepassStates),
       dealerships: getFilterState(dealershipStates),
@@ -459,11 +457,29 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
         legacyCars: legacyCarsState,
       },
     });
-  }, [limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, newCarsState, eventCarsState, minigameCarsState, legacyCarsState]);
+  }, [searchQuery, limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, newCarsState, eventCarsState, minigameCarsState, legacyCarsState]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="mt-6 flex max-w-full flex-wrap gap-[2px]">
+      {/* search bar */}
+      <div className="mt-6 flex w-full gap-2">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="min-w-0 flex-1 rounded-md bg-zinc-900 px-4 py-2 text-white focus:bg-zinc-800 focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={handleReset}
+          className="flex items-center justify-center shrink-0 rounded-md bg-red-950 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-900"
+        >
+          Reset
+        </button>
+      </div>
+
+      <div className="mt-6 grid grid-cols-3">
         <SectionButton
           label="Filters"
           active={activeSection === "filters"}
@@ -481,10 +497,10 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
         />
       </div>
 
-      <div className="mt-6 flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-600 border-t border-gray-700 pt-4">{activeContent}</div>
+      <div className="mt-6 flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-zinc-600 border-t border-zinc-700 pt-4">{activeContent}</div>
 
       {/* Footer ticker */}
-      <div className="mt-auto shrink-0 pt-6 text-xs text-gray-500">
+      <div className="mt-auto shrink-0 pt-6 text-xs text-zinc-500">
         <div className="overflow-hidden whitespace-nowrap">
           <div
             className="flex w-max items-center gap-6"
@@ -501,4 +517,4 @@ export const SidebarFilters = forwardRef<SidebarFiltersHandle, SidebarFiltersPro
       </div>
     </div>
   );
-});
+}

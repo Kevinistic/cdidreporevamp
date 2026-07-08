@@ -15,16 +15,16 @@ type CreditsButtonProps = {
 
 function CreditsButton({ title, desc, label, href }: CreditsButtonProps) {
 	return (
-		<div className="flex w-full items-center justify-between gap-4 rounded-lg border border-gray-800 bg-gray-900/40 px-3 py-2">
+		<div className="flex w-full items-center justify-between gap-4 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2">
 			<div className="min-w-0">
-				<p className="text-sm text-gray-300">{title}</p>
-				<p className="text-sm text-gray-500">{desc}</p>
+				<p className="text-sm text-zinc-300">{title}</p>
+				<p className="text-sm text-zinc-500">{desc}</p>
 			</div>
 
 			<button
 				type="button"
 				onClick={() => window.open(href, "_blank")}
-				className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1 text-left text-xs text-gray-500 font-medium whitespace-nowrap transition hover:text-gray-300"
+				className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-1 text-left text-xs text-zinc-500 font-medium whitespace-nowrap transition hover:text-zinc-300"
 			>
 				<span>{label}</span>
 				<SquareArrowOutUpRight size={16} />
@@ -36,13 +36,13 @@ function CreditsButton({ title, desc, label, href }: CreditsButtonProps) {
 export function Credits({ onBack }: CreditsProps) {
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" onClick={onBack}>
-			<section className="relative flex h-[80vh] w-[90vw] max-w-xl flex-col overflow-hidden rounded-2xl border border-gray-700 bg-gray-950 text-white shadow-2xl md:h-3/5 md:w-1/2" onClick={(event) => event.stopPropagation()}>
-				<button type="button" onClick={onBack} className="absolute left-4 top-4 rounded-md border border-gray-600 bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-800">
+			<section className="relative flex h-[80vh] w-[90vw] max-w-xl flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950 text-white shadow-2xl md:h-3/5 md:w-1/2" onClick={(event) => event.stopPropagation()}>
+				<button type="button" onClick={onBack} className="absolute left-4 top-4 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800">
 					Back
 				</button>
 
-				<div className="flex h-full flex-col gap-4 overflow-y-auto p-6 pt-16 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-600">
-					<p className="text-xs uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
+				<div className="flex h-full flex-col gap-4 overflow-y-auto p-6 pt-16 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-zinc-600">
+					<p className="text-xs uppercase tracking-[0.2em] text-zinc-400 flex items-center gap-2">
                         <ScrollText size={16} className="inline-block"/>
                         Credits
                     </p>
@@ -53,7 +53,7 @@ export function Credits({ onBack }: CreditsProps) {
 						<CreditsButton title="CDID Discord" desc="Car Driving Indonesia Discord Server" label="discord.gg" href="https://discord.gg/cdid" />
 					</div>
 
-					<p className="text-xs uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
+					<p className="text-xs uppercase tracking-[0.2em] text-zinc-400 flex items-center gap-2">
                         <CodeXml size={16} className="inline-block"/>
                         Built with
                     </p>
@@ -66,7 +66,7 @@ export function Credits({ onBack }: CreditsProps) {
 						<CreditsButton title="Lucide Icons" desc="A collection of free, open-source icons" label="lucide.dev" href="https://lucide.dev/" />
 					</div>
 
-                    <p className="text-xs uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
+                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-400 flex items-center gap-2">
                         <Lightbulb size={16} className="inline-block"/>
                         Developer
                     </p>

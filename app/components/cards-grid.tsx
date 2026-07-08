@@ -178,16 +178,16 @@ export function CardsGrid({
     <section
       className="min-h-0 flex-1 overflow-y-auto px-2 py-2
       [&::-webkit-scrollbar]:w-2
-      [&::-webkit-scrollbar-thumb]:bg-gray-600"
+      [&::-webkit-scrollbar-thumb]:bg-zinc-600"
     >
-      {isLoading ? <p className="mb-2 text-xs uppercase tracking-[0.2em] text-gray-500">Loading page...</p> : null}
+      {isLoading ? <p className="mb-2 text-xs uppercase tracking-[0.2em] text-zinc-500">Loading page...</p> : null}
       <div className="grid gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {pagedRows.map((card) => (
           <button
             key={card._id}
             type="button"
             onClick={() => onCardClick?.(card)}
-            className="flex h-full flex-col justify-between rounded-lg border border-gray-700 p-2 text-white shadow-sm hover:bg-gray-800"
+            className="flex h-full flex-col justify-between rounded-lg border border-zinc-700 p-2 text-white shadow-sm hover:bg-zinc-800"
           >
             <div>
               <p className="text-sm font-bold text-center">{card.CarName}</p>

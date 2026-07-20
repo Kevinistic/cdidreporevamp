@@ -60,7 +60,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
       {paginationItems.map((item, index) => {
         if (item === "ellipsis") {
           return (
-            <span key={`ellipsis-${index}`} className="px-1 text-gray-500">
+            <span key={`ellipsis-${index}`} className="px-1 text-zinc-500">
               ..
             </span>
           );
@@ -74,8 +74,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
             aria-current={item === currentPage ? "page" : undefined}
             className={`min-w-9 rounded-md border px-2 py-1 transition-colors ${
               item === currentPage
-                ? "border-white bg-white text-gray-900"
-                : "border-gray-500 text-white hover:bg-gray-800"
+                ? "border-white bg-white text-zinc-900"
+                : "border-zinc-500 text-white hover:bg-zinc-800"
             }`}
           >
             {item}

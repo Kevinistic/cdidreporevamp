@@ -14,8 +14,6 @@ export default function HomeClient() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(false);
   const [hasClickedFilter, setHasClickedFilter] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const sidebarFiltersRef = useRef<{ reset: () => void }>(null);
   const [filters, setFilters] = useState<Filters | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -80,7 +78,7 @@ export default function HomeClient() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filters]);
+  }, [filters]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -121,43 +119,20 @@ export default function HomeClient() {
     }
   };
 
-  const handleResetFilters = () => {
-    setSearchQuery("");
-    sidebarFiltersRef.current?.reset();
-  };
 
   return (
     <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
       <aside
         className={
           isSidebarVisible
-            ? `fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md ${isTransitionEnabled ? "transition-transform duration-200" : ""} md:left-0 md:top-0 md:h-full md:w-80 md:border-r md:border-gray-700 bottom-0 left-0 right-0 h-[70vh] border-t border-gray-700 md:border-t-0`
-            : `fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md ${isTransitionEnabled ? "transition-transform duration-200" : ""} md:-translate-x-full md:pointer-events-none bottom-0 left-0 right-0 h-[70vh] border-t border-gray-700 translate-y-full md:translate-y-0 md:border-t-0`
+            ? `fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md ${isTransitionEnabled ? "transition-transform duration-200" : ""} md:left-0 md:top-0 md:h-full md:w-80 md:border-r md:border-zinc-700 bottom-0 left-0 right-0 h-[70vh] border-t border-zinc-700 md:border-t-0`
+            : `fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md ${isTransitionEnabled ? "transition-transform duration-200" : ""} md:-translate-x-full md:pointer-events-none bottom-0 left-0 right-0 h-[70vh] border-t border-zinc-700 translate-y-full md:translate-y-0 md:border-t-0`
         }
       >
         <div className="flex h-full w-full flex-col">
           <span className="text-xs uppercase tracking-[0.2em]">CDID Car Database (Unofficial)</span>
 
-          {/* search bar */}
-          <div className="mt-6 flex w-full gap-2">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="min-w-0 flex-1 rounded-md bg-gray-900 px-4 py-2 text-white focus:bg-gray-800 focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="flex items-center justify-center shrink-0 rounded-md bg-red-950 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-900"
-            >
-              Reset
-            </button>
-          </div>
-
           <SidebarFilters
-            ref={sidebarFiltersRef}
             onChange={(f) => setFilters(f)}
             carCount={totalItems}
             buildSeconds={buildSeconds ?? 0}
@@ -183,15 +158,15 @@ export default function HomeClient() {
             : `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${isTransitionEnabled ? "transition-[padding-left,padding-bottom] duration-200" : ""} md:pl-0 md:pb-0 pl-0 pb-0`
         }
       >
-        <header className="flex h-16 items-center justify-between border-b border-gray-700 px-2">
+        <header className="flex h-16 items-center justify-between border-b border-zinc-700 px-2">
           <button
             type="button"
             onClick={handleFilterClick}
             aria-expanded={isSidebarVisible}
             className={
               hasClickedFilter
-                ? "rounded-md border border-gray-500 px-2 py-2 text-sm text-white hover:bg-gray-800"
-                : "golden-border-spin rounded-md px-2 py-2 text-sm text-white hover:bg-gray-800"
+                ? "rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
+                : "golden-border-spin rounded-md px-2 py-2 text-sm text-white hover:bg-zinc-800"
             }
           >
             <span className="relative z-10 flex items-center justify-center">
@@ -205,7 +180,7 @@ export default function HomeClient() {
             <button
               type="button"
               onClick={() => window.open("https://discord.gg/QPMguJNTsG", "_blank")}
-              className="rounded-md border border-gray-500 px-2 py-2 text-sm text-white hover:bg-gray-800 aspect-square"
+              className="rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800 aspect-square"
             >
               <img 
                 src="/discord.svg"
@@ -221,7 +196,7 @@ export default function HomeClient() {
                 setIsCreditsVisible(true);
               }}
               aria-expanded={isCreditsVisible}
-              className="rounded-md border border-gray-500 px-2 py-2 text-sm text-white hover:bg-gray-800"
+              className="rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
             >
               <ScrollText size={16} />
             </button>
@@ -231,7 +206,7 @@ export default function HomeClient() {
         <CardsGrid
           cards={allCars}
           isLoading={isLoading}
-          search={searchQuery}
+          search={filters?.search ?? ""}
           filters={filters}
           page={currentPage}
           pageSize={pageSize}

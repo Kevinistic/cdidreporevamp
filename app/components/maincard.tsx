@@ -13,15 +13,11 @@ type MainCardProps = {
 export function MainCard({ card, onBack }: MainCardProps) {
 	const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
 
-	const rimsCode = card.Rims?.match(/\d+$/);
-
 	const clamp = (n: unknown) => {
 		const v = Number(n);
  		if (Number.isNaN(v)) return 0;
  		return Math.max(0, Math.min(255, v));
  	};
-	const toHex = (n: number) => n.toString(16).padStart(2, "0");
-	const hexCode = `#${toHex(clamp(card.rgb_0))}${toHex(clamp(card.rgb_1))}${toHex(clamp(card.rgb_2))}`;
 	const isTrue = (value: unknown) => String(value).toLowerCase() === "true";
 	const infoText = useMemo(() => {
 		const messages: string[] = [];

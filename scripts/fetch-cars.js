@@ -36,7 +36,6 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
-const CARD_SELECT_COLUMNS = `_id,CarName,Cost,CarImageUrl,Dealership,Limited,Gamepass,Engine,Legacy,Inaccurate,New,event,lostmedia,minigame`;
 
 async function fetchAllCars() {
   console.log("Starting build-time cars data fetch...");
@@ -55,7 +54,7 @@ async function fetchAllCars() {
     console.log(`Fetching page ${page + 1} (rows ${start} to ${end})...`);
     const { data, error } = await supabase
       .from(viewName)
-      .select(CARD_SELECT_COLUMNS)
+      .select("*")
       .range(start, end);
 
     if (error) {

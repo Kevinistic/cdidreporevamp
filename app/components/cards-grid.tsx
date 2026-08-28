@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Filters } from "./sidebar-filters";
 import type { CardItem } from "./card";
 
@@ -50,6 +50,8 @@ export function CardsGrid({
   onCardClick,
   isLoading = false,
 }: CardsGridProps) {
+  const gridRef = useRef<HTMLElement>(null);
+
   // 1. Client-side filtering and sorting
   const filteredAndSorted = useMemo(() => {
     let result = [...cards];
@@ -174,8 +176,13 @@ export function CardsGrid({
     return filteredAndSorted.slice(start, end);
   }, [filteredAndSorted, page, pageSize]);
 
+  useEffect(() => {
+    gridRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
+
   return (
     <section
+      ref={gridRef}
       className="min-h-0 flex-1 overflow-y-auto px-2 py-2
       [&::-webkit-scrollbar]:w-2
       [&::-webkit-scrollbar-thumb]:bg-zinc-600"

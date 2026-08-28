@@ -13,11 +13,6 @@ type MainCardProps = {
 export function MainCard({ card, onBack }: MainCardProps) {
 	const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
 
-	const clamp = (n: unknown) => {
-		const v = Number(n);
- 		if (Number.isNaN(v)) return 0;
- 		return Math.max(0, Math.min(255, v));
- 	};
 	const isTrue = (value: unknown) => String(value).toLowerCase() === "true";
 	const infoText = useMemo(() => {
 		const messages: string[] = [];

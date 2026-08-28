@@ -13,7 +13,6 @@ export default function HomeClient() {
   const pageStartRef = useRef(performance.now());
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(false);
-  const [hasClickedFilter, setHasClickedFilter] = useState(true);
   const [filters, setFilters] = useState<Filters | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -32,12 +31,6 @@ export default function HomeClient() {
     const transitionTimer = setTimeout(() => {
       setIsTransitionEnabled(true);
     }, 100);
-
-    // 3. Read clicked status from localStorage
-    const clicked = localStorage.getItem("cdid_filter_clicked");
-    if (!clicked) {
-      setHasClickedFilter(false);
-    }
 
     return () => {
       clearTimeout(transitionTimer);
@@ -113,10 +106,6 @@ export default function HomeClient() {
 
   const handleFilterClick = () => {
     setIsSidebarVisible((current) => !current);
-    if (!hasClickedFilter) {
-      setHasClickedFilter(true);
-      localStorage.setItem("cdid_filter_clicked", "true");
-    }
   };
 
 
@@ -163,11 +152,7 @@ export default function HomeClient() {
             type="button"
             onClick={handleFilterClick}
             aria-expanded={isSidebarVisible}
-            className={
-              hasClickedFilter
-                ? "rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
-                : "golden-border-spin rounded-md px-2 py-2 text-sm text-white hover:bg-zinc-800"
-            }
+            className="rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
           >
             <span className="relative z-10 flex items-center justify-center">
               <SlidersHorizontal size={16} />

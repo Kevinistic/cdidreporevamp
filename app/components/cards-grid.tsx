@@ -96,40 +96,16 @@ export function CardsGrid({
           result = result.filter((card) => !excluded.includes(card.Gamepass));
         }
       }
-      // New cars filter
-      if (filters.other && filters.other.newCars) {
-        const newCarsState = filters.other.newCars;
-        if (newCarsState === "include") {
+      // Type filter (radio button selection)
+      if (filters.type && filters.type !== "all") {
+        if (filters.type === "new") {
           result = result.filter((card) => card.New);
-        } else if (newCarsState === "exclude") {
-          result = result.filter((card) => !card.New);
-        }
-      }
-      // Event cars filter
-      if (filters.other && filters.other.eventCars) {
-        const eventCarsState = filters.other.eventCars;
-        if (eventCarsState === "include") {
+        } else if (filters.type === "event") {
           result = result.filter((card) => card.event);
-        } else if (eventCarsState === "exclude") {
-          result = result.filter((card) => !card.event);
-        }
-      }
-      // Minigame cars filter
-      if (filters.other && filters.other.minigameCars) {
-        const minigameCarsState = filters.other.minigameCars;
-        if (minigameCarsState === "include") {
+        } else if (filters.type === "minigame") {
           result = result.filter((card) => card.minigame);
-        } else if (minigameCarsState === "exclude") {
-          result = result.filter((card) => !card.minigame);
-        }
-      }
-      // Legacy cars filter
-      if (filters.other && filters.other.legacyCars) {
-        const legacyCarsState = filters.other.legacyCars;
-        if (legacyCarsState === "include") {
+        } else if (filters.type === "removed") {
           result = result.filter((card) => card.Legacy);
-        } else if (legacyCarsState === "exclude") {
-          result = result.filter((card) => !card.Legacy);
         }
       }
       // Price range filter

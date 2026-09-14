@@ -7,7 +7,7 @@ type DropdownOption = {
   value: string;
 };
 
-type SectionKey = "filters" | "price" | "sortBy";
+type SectionKey = "types" | "filters" | "price" | "sortBy";
 
 type PriceRange = {
   min: string;
@@ -47,18 +47,12 @@ export type Filters = {
   dealerships: FilterState;
   priceRange: PriceRange;
   sortBy: string;
-  other: {
-    newCars: "include" | "exclude" | "neutral";
-    eventCars: "include" | "exclude" | "neutral";
-    minigameCars: "include" | "exclude" | "neutral";
-    legacyCars: "include" | "exclude" | "neutral";
-  };
+  type: string;
 };
 
 type SidebarFiltersProps = {
   onChange?: (filters: Filters) => void;
   carCount?: number;
-  buildSeconds?: number;
   dealershipOptions?: DropdownOption[];
   limitedOptions?: DropdownOption[];
   gamepassOptions?: DropdownOption[];
@@ -170,10 +164,12 @@ function RadioPanel({
   options,
   selectedValue,
   onSelect,
+  name = "radio-group",
 }: {
   options: DropdownOption[];
   selectedValue: string;
   onSelect: (value: string) => void;
+  name?: string;
 }) {
   return (
     <div className="grid grid-cols-1 gap-2 p-1">
@@ -184,7 +180,7 @@ function RadioPanel({
         >
           <input
             type="radio"
-            name="sort-by"
+            name={name}
             checked={selectedValue === option.value}
             onChange={() => onSelect(option.value)}
             className="h-4 w-4 border-zinc-500 bg-zinc-800 text-blue-500 focus:ring-blue-500"
@@ -217,7 +213,7 @@ function SectionButton({
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 w-full items-center px-4 py-2 text-center text-xs font-medium whitespace-nowrap transition ${
+      className={`shrink-0 w-full items-center px-2 py-2 text-center text-xs font-medium whitespace-nowrap transition ${
         active
           ? "bg-zinc-700 text-white"
           : "bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
@@ -244,12 +240,22 @@ function getFilterState(states: Record<string, "include" | "exclude" | "neutral"
 export function SidebarFilters({
   onChange,
   carCount = 0,
-  buildSeconds = 0,
   dealershipOptions = [],
   limitedOptions = [],
   gamepassOptions = [],
 }: SidebarFiltersProps) {
-  const [activeSection, setActiveSection] = useState<SectionKey>("filters");
+  const [activeSection, setActiveSection] = useState<SectionKey>("types");
+
+  const types = buildDropdown({
+    label: "Types",
+    options: [
+      { label: "All Cars", value: "all" },
+      { label: "New Cars", value: "new" },
+      { label: "Event Cars", value: "event" },
+      { label: "Minigame Cars", value: "minigame" },
+      { label: "Removed Cars", value: "removed" },
+    ],
+  });
 
   const price = buildPriceDropdown("Price");
 
@@ -264,6 +270,7 @@ export function SidebarFilters({
   });
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [limitedStates, setLimitedStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [gamepassStates, setGamepassStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [dealershipStates, setDealershipStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
@@ -271,14 +278,11 @@ export function SidebarFilters({
   const [priceInput, setPriceInput] = useState<PriceRange>(DEFAULT_PRICE_RANGE);
   const [priceFocused, setPriceFocused] = useState<{ min: boolean; max: boolean }>({ min: false, max: false });
   const [sortByValue, setSortByValue] = useState<string>(DEFAULT_SORT_BY);
-  const [newCarsState, setNewCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
-  const [eventCarsState, setEventCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
-  const [minigameCarsState, setMinigameCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
-  const [legacyCarsState, setLegacyCarsState] = useState<"include" | "exclude" | "neutral">("neutral");
 
   const handleReset = () => {
-    setActiveSection("filters");
+    setActiveSection("types");
     setSearchQuery("");
+    setSelectedType("all");
     setLimitedStates({});
     setGamepassStates({});
     setDealershipStates({});
@@ -286,10 +290,6 @@ export function SidebarFilters({
     setPriceInput(DEFAULT_PRICE_RANGE);
     setPriceFocused({ min: false, max: false });
     setSortByValue(DEFAULT_SORT_BY);
-    setNewCarsState("neutral");
-    setEventCarsState("neutral");
-    setMinigameCarsState("neutral");
-    setLegacyCarsState("neutral");
   };
 
   const toggleOption = (
@@ -312,6 +312,15 @@ export function SidebarFilters({
 
   const activeContent = (() => {
     switch (activeSection) {
+      case "types":
+        return (
+          <RadioPanel
+            options={types.options}
+            selectedValue={selectedType}
+            onSelect={setSelectedType}
+            name="types"
+          />
+        );
       case "filters":
         return (
           <div className="space-y-6">
@@ -347,56 +356,6 @@ export function SidebarFilters({
                 />
               </div>
             )}
-
-            <div className="border-t border-zinc-800/60 pt-4">
-              <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Other</span>
-              <div className="flex flex-wrap gap-2 p-1">
-                <FilterOptionButton
-                  label="New"
-                  state={newCarsState}
-                  onClick={() => {
-                    setNewCarsState((current) => {
-                      if (current === "neutral") return "include";
-                      if (current === "include") return "exclude";
-                      return "neutral";
-                    });
-                  }}
-                />
-                <FilterOptionButton
-                  label="Event"
-                  state={eventCarsState}
-                  onClick={() => {
-                    setEventCarsState((current) => {
-                      if (current === "neutral") return "include";
-                      if (current === "include") return "exclude";
-                      return "neutral";
-                    });
-                  }}
-                />
-                <FilterOptionButton
-                  label="Minigame"
-                  state={minigameCarsState}
-                  onClick={() => {
-                    setMinigameCarsState((current) => {
-                      if (current === "neutral") return "include";
-                      if (current === "include") return "exclude";
-                      return "neutral";
-                    });
-                  }}
-                />
-                <FilterOptionButton
-                  label="Removed"
-                  state={legacyCarsState}
-                  onClick={() => {
-                    setLegacyCarsState((current) => {
-                      if (current === "neutral") return "include";
-                      if (current === "include") return "exclude";
-                      return "neutral";
-                    });
-                  }}
-                />
-              </div>
-            </div>
           </div>
         );
       case "price":
@@ -430,6 +389,7 @@ export function SidebarFilters({
             options={sortBy.options}
             selectedValue={sortByValue}
             onSelect={setSortByValue}
+            name="sort-by"
           />
         );
       default:
@@ -450,14 +410,9 @@ export function SidebarFilters({
       dealerships: getFilterState(dealershipStates),
       priceRange,
       sortBy: sortByValue,
-      other: {
-        newCars: newCarsState,
-        eventCars: eventCarsState,
-        minigameCars: minigameCarsState,
-        legacyCars: legacyCarsState,
-      },
+      type: selectedType,
     });
-  }, [searchQuery, limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, newCarsState, eventCarsState, minigameCarsState, legacyCarsState]);
+  }, [searchQuery, limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, selectedType]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -479,7 +434,12 @@ export function SidebarFilters({
         </button>
       </div>
 
-      <div className="mt-6 grid grid-cols-3">
+      <div className="mt-6 grid grid-cols-4">
+        <SectionButton
+          label={types.label}
+          active={activeSection === "types"}
+          onClick={() => setActiveSection("types")}
+        />
         <SectionButton
           label="Filters"
           active={activeSection === "filters"}
@@ -507,10 +467,10 @@ export function SidebarFilters({
             style={{ animation: "sidebar-footer-ticker 18s linear infinite" }}
           >
             <span>Made with ❤️ by aoderu</span>
-            <span>{`Built in ${buildSeconds.toFixed(3)} seconds!`}</span>
+            <span>Built since Aug 2025!</span>
             <span>{`Showing ${carCount} cars right now!`}</span>
             <span aria-hidden="true">Made with ❤️ by aoderu</span>
-            <span aria-hidden="true">{`Built in ${buildSeconds.toFixed(3)} seconds!`}</span>
+            <span aria-hidden="true">Built since Aug 2025!</span>
             <span aria-hidden="true">{`Showing ${carCount} cars right now!`}</span>
           </div>
         </div>

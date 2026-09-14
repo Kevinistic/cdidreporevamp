@@ -10,7 +10,6 @@ import { MainCard } from "./maincard";
 import { Credits } from "./credits";
 
 export default function HomeClient() {
-  const pageStartRef = useRef(performance.now());
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(false);
   const [filters, setFilters] = useState<Filters | undefined>(undefined);
@@ -18,7 +17,6 @@ export default function HomeClient() {
   const [totalItems, setTotalItems] = useState(0);
   const [selectedCard, setSelectedCard] = useState<CardItem | null>(null);
   const [isCreditsVisible, setIsCreditsVisible] = useState(false);
-  const [buildSeconds, setBuildSeconds] = useState<number | null>(null);
   const [allCars, setAllCars] = useState<CardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -79,13 +77,6 @@ export default function HomeClient() {
     }
   }, [currentPage, totalPages]);
 
-  useEffect(() => {
-    if (buildSeconds === null && totalItems > 0 && !isLoading) {
-      const elapsedSeconds = (performance.now() - pageStartRef.current) / 1000;
-      setBuildSeconds(Number(elapsedSeconds.toFixed(3)));
-    }
-  }, [buildSeconds, totalItems, isLoading]);
-
   const { dealershipOptions, limitedOptions, gamepassOptions } = useMemo(() => {
     const getUnique = (col: keyof CardItem) => {
       const vals = allCars
@@ -124,7 +115,6 @@ export default function HomeClient() {
           <SidebarFilters
             onChange={(f) => setFilters(f)}
             carCount={totalItems}
-            buildSeconds={buildSeconds ?? 0}
             dealershipOptions={dealershipOptions}
             limitedOptions={limitedOptions}
             gamepassOptions={gamepassOptions}

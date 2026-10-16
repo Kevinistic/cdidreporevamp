@@ -1,1 +1,0 @@
-export { SidebarFilters } from "./sidebar-filters";

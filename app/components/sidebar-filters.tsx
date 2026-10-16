@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type DropdownOption = {
   label: string;
@@ -14,13 +14,22 @@ type PriceRange = {
   max: string;
 };
 
-const DEFAULT_PRICE_RANGE: PriceRange = { min: "0", max: "180000000000" };
 const DEFAULT_SORT_BY = "price-desc";
 
-type DropdownConfig = {
-  label: string;
-  options: DropdownOption[];
-};
+const TYPE_OPTIONS: DropdownOption[] = [
+  { label: "All Cars", value: "all" },
+  { label: "New Cars", value: "new" },
+  { label: "Event Cars", value: "event" },
+  { label: "Minigame Cars", value: "minigame" },
+  { label: "Removed Cars", value: "removed" },
+];
+
+const SORT_OPTIONS: DropdownOption[] = [
+  { label: "Name: A to Z", value: "name-asc" },
+  { label: "Name: Z to A", value: "name-desc" },
+  { label: "Price: Low to High", value: "price-asc" },
+  { label: "Price: High to Low", value: "price-desc" },
+];
 
 function formatPrice(value: string) {
   if (value === "") return "";
@@ -53,6 +62,7 @@ export type Filters = {
 type SidebarFiltersProps = {
   onChange?: (filters: Filters) => void;
   carCount?: number;
+  maxPrice?: number;
   dealershipOptions?: DropdownOption[];
   limitedOptions?: DropdownOption[];
   gamepassOptions?: DropdownOption[];
@@ -80,6 +90,7 @@ function FilterOptionButton({
     <button
       type="button"
       onClick={onClick}
+      aria-label={state === "neutral" ? label : `${label} (${state === "include" ? "included" : "excluded"})`}
       className={`inline-flex shrink-0 w-fit items-center rounded-full border px-3 py-1 text-left text-sm font-medium whitespace-nowrap transition ${styleClass}`}
     >
       <span>{label}</span>
@@ -192,14 +203,6 @@ function RadioPanel({
   );
 }
 
-function buildDropdown({ label, options }: DropdownConfig) {
-  return { label, options };
-}
-
-function buildPriceDropdown(label: string) {
-  return { label };
-}
-
 function SectionButton({
   label,
   active,
@@ -213,6 +216,7 @@ function SectionButton({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`shrink-0 w-full items-center px-2 py-2 text-center text-xs font-medium whitespace-nowrap transition ${
         active
           ? "bg-zinc-700 text-white"
@@ -240,42 +244,22 @@ function getFilterState(states: Record<string, "include" | "exclude" | "neutral"
 export function SidebarFilters({
   onChange,
   carCount = 0,
+  maxPrice = 0,
   dealershipOptions = [],
   limitedOptions = [],
   gamepassOptions = [],
 }: SidebarFiltersProps) {
   const [activeSection, setActiveSection] = useState<SectionKey>("types");
 
-  const types = buildDropdown({
-    label: "Types",
-    options: [
-      { label: "All Cars", value: "all" },
-      { label: "New Cars", value: "new" },
-      { label: "Event Cars", value: "event" },
-      { label: "Minigame Cars", value: "minigame" },
-      { label: "Removed Cars", value: "removed" },
-    ],
-  });
-
-  const price = buildPriceDropdown("Price");
-
-  const sortBy = buildDropdown({
-    label: "Sort by",
-    options: [
-      { label: "Name: A to Z", value: "name-asc" },
-      { label: "Name: Z to A", value: "name-desc" },
-      { label: "Price: Low to High", value: "price-asc" },
-      { label: "Price: High to Low", value: "price-desc" },
-    ],
-  });
+  const defaultPriceRange = useMemo<PriceRange>(() => ({ min: "0", max: String(maxPrice) }), [maxPrice]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [limitedStates, setLimitedStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [gamepassStates, setGamepassStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [dealershipStates, setDealershipStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
-  const [priceRange, setPriceRange] = useState<PriceRange>(DEFAULT_PRICE_RANGE);
-  const [priceInput, setPriceInput] = useState<PriceRange>(DEFAULT_PRICE_RANGE);
+  const [priceRange, setPriceRange] = useState<PriceRange>(defaultPriceRange);
+  const [priceInput, setPriceInput] = useState<PriceRange>(defaultPriceRange);
   const [priceFocused, setPriceFocused] = useState<{ min: boolean; max: boolean }>({ min: false, max: false });
   const [sortByValue, setSortByValue] = useState<string>(DEFAULT_SORT_BY);
 
@@ -286,8 +270,8 @@ export function SidebarFilters({
     setLimitedStates({});
     setGamepassStates({});
     setDealershipStates({});
-    setPriceRange(DEFAULT_PRICE_RANGE);
-    setPriceInput(DEFAULT_PRICE_RANGE);
+    setPriceRange(defaultPriceRange);
+    setPriceInput(defaultPriceRange);
     setPriceFocused({ min: false, max: false });
     setSortByValue(DEFAULT_SORT_BY);
   };
@@ -315,7 +299,7 @@ export function SidebarFilters({
       case "types":
         return (
           <RadioPanel
-            options={types.options}
+            options={TYPE_OPTIONS}
             selectedValue={selectedType}
             onSelect={setSelectedType}
             name="types"
@@ -379,14 +363,14 @@ export function SidebarFilters({
             }}
             onMaxBlur={() => {
               setPriceFocused((current) => ({ ...current, max: false }));
-              setPriceRange((current) => ({ ...current, max: priceInput.max || "180000000000" }));
+              setPriceRange((current) => ({ ...current, max: priceInput.max || defaultPriceRange.max }));
             }}
           />
         );
       case "sortBy":
         return (
           <RadioPanel
-            options={sortBy.options}
+            options={SORT_OPTIONS}
             selectedValue={sortByValue}
             onSelect={setSortByValue}
             name="sort-by"
@@ -421,6 +405,7 @@ export function SidebarFilters({
         <input
           type="text"
           placeholder="Search..."
+          aria-label="Search cars by name"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="min-w-0 flex-1 rounded-md bg-zinc-900 px-4 py-2 text-white focus:bg-zinc-800 focus:outline-none"
@@ -436,7 +421,7 @@ export function SidebarFilters({
 
       <div className="mt-6 grid grid-cols-4">
         <SectionButton
-          label={types.label}
+          label="Types"
           active={activeSection === "types"}
           onClick={() => setActiveSection("types")}
         />
@@ -446,12 +431,12 @@ export function SidebarFilters({
           onClick={() => setActiveSection("filters")}
         />
         <SectionButton
-          label={price.label}
+          label="Price"
           active={activeSection === "price"}
           onClick={() => setActiveSection("price")}
         />
         <SectionButton
-          label={sortBy.label}
+          label="Sort by"
           active={activeSection === "sortBy"}
           onClick={() => setActiveSection("sortBy")}
         />

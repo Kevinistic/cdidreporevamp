@@ -3,6 +3,18 @@
 type PaginationItem = number | "ellipsis";
 
 function getPaginationItems(currentPage: number, totalPages: number): PaginationItem[] {
+  const items = buildPaginationItems(currentPage, totalPages);
+
+  // Drop any ellipsis that sits between consecutive pages and so hides nothing (e.g. page 4 of 6)
+  return items.filter((item, index) => {
+    if (item !== "ellipsis") return true;
+    const prev = items[index - 1];
+    const next = items[index + 1];
+    return typeof prev !== "number" || typeof next !== "number" || next - prev > 1;
+  });
+}
+
+function buildPaginationItems(currentPage: number, totalPages: number): PaginationItem[] {
   if (totalPages <= 1) {
     return [1];
   }

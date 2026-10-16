@@ -55,6 +55,7 @@ async function fetchAllCars() {
     const { data, error } = await supabase
       .from(viewName)
       .select("*")
+      .order("_id", { ascending: true })
       .range(start, end);
 
     if (error) {

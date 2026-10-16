@@ -14,5 +14,3 @@ export type CardItem = {
   lostmedia: boolean;
   minigame: boolean;
 };
-
-export default null;

@@ -1,24 +1,30 @@
 "use client";
 
-import { SidebarFilters } from "./sidebar-filters-panel";
-import { CardsGrid, type CardItem } from "./cards-grid";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { SidebarFilters } from "./sidebar-filters";
+import { CardsGrid } from "./cards-grid";
+import { useEffect, useState, useMemo } from "react";
+import type { CardItem } from "./card";
 import type { Filters } from "./sidebar-filters";
 import { SlidersHorizontal, ScrollText } from 'lucide-react';
 import { Pagination } from "./pagination-bar";
 import { MainCard } from "./maincard";
 import { Credits } from "./credits";
+import { cn } from "../lib/cn";
+import { useFilteredCars } from "../lib/use-filtered-cars";
 
-export default function HomeClient() {
+const PAGE_SIZE = 40;
+
+type HomeClientProps = {
+  cars: CardItem[];
+};
+
+export default function HomeClient({ cars }: HomeClientProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(false);
   const [filters, setFilters] = useState<Filters | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const [selectedCard, setSelectedCard] = useState<CardItem | null>(null);
   const [isCreditsVisible, setIsCreditsVisible] = useState(false);
-  const [allCars, setAllCars] = useState<CardItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // 1. Closed by default on mobile (breakpoint 768px matches Tailwind md)
@@ -35,51 +41,24 @@ export default function HomeClient() {
     };
   }, []);
 
-  const pageSize = 40;
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const filteredCars = useFilteredCars(cars, filters);
+  const total = filteredCars.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(currentPage, totalPages);
 
-  useEffect(() => {
-    let active = true;
-    fetch("/data/cars.json")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load cars.json");
-        return res.json();
-      })
-      .then((data) => {
-        if (active) {
-          const normalizedCars = data.map((car: any) => ({
-            ...car,
-            Price: typeof car.Price === "number"
-              ? car.Price
-              : Number(car.Cost ?? car.Price ?? 0),
-          }));
+  const pagedRows = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredCars.slice(start, start + PAGE_SIZE);
+  }, [filteredCars, page]);
 
-          setAllCars(normalizedCars);
-          setIsLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching cars:", err);
-        if (active) setIsLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+  const maxPrice = useMemo(
+    () => cars.reduce((max, car) => Math.max(max, car.Price), 0),
+    [cars]
+  );
 
   const { dealershipOptions, limitedOptions, gamepassOptions } = useMemo(() => {
     const getUnique = (col: keyof CardItem) => {
-      const vals = allCars
+      const vals = cars
         .map((c) => c[col])
         .filter(Boolean)
         .map(String);
@@ -93,35 +72,37 @@ export default function HomeClient() {
       limitedOptions: getUnique("Limited").map((v) => ({ label: v, value: v })),
       gamepassOptions: getUnique("Gamepass").map((v) => ({ label: v, value: v })),
     };
-  }, [allCars]);
+  }, [cars]);
 
-  const handleFilterClick = () => {
-    setIsSidebarVisible((current) => !current);
+  const handleFiltersChange = (nextFilters: Filters) => {
+    setFilters(nextFilters);
+    setCurrentPage(1);
   };
-
 
   return (
     <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
       <aside
-        className={
-          isSidebarVisible
-            ? `fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md ${isTransitionEnabled ? "transition-transform duration-200" : ""} md:left-0 md:top-0 md:h-full md:w-80 md:border-r md:border-zinc-700 bottom-0 left-0 right-0 h-[70vh] border-t border-zinc-700 md:border-t-0`
-            : `fixed z-40 overflow-hidden bg-black/95 p-4 backdrop-blur-md ${isTransitionEnabled ? "transition-transform duration-200" : ""} md:-translate-x-full md:pointer-events-none bottom-0 left-0 right-0 h-[70vh] border-t border-zinc-700 translate-y-full md:translate-y-0 md:border-t-0`
-        }
+        inert={!isSidebarVisible}
+        className={cn(
+          "fixed bottom-0 left-0 right-0 z-40 h-[70dvh] overflow-hidden border-t border-zinc-700 bg-black/95 p-4 backdrop-blur-md md:top-0 md:h-full md:w-80 md:border-r md:border-t-0",
+          isTransitionEnabled && "transition-transform duration-200",
+          !isSidebarVisible && "translate-y-full md:translate-y-0 md:-translate-x-full"
+        )}
       >
         <div className="flex h-full w-full flex-col">
-          <span className="text-xs uppercase tracking-[0.2em]">CDID Car Database (Unofficial)</span>
+          <h1 className="text-xs uppercase tracking-[0.2em]">CDID Car Database (Unofficial)</h1>
 
           <SidebarFilters
-            onChange={(f) => setFilters(f)}
-            carCount={totalItems}
+            onChange={handleFiltersChange}
+            carCount={total}
+            maxPrice={maxPrice}
             dealershipOptions={dealershipOptions}
             limitedOptions={limitedOptions}
             gamepassOptions={gamepassOptions}
           />
         </div>
       </aside>
-      
+
       {/* Mobile backdrop - only visible on mobile when sidebar is open */}
       {isSidebarVisible && (
         <div
@@ -129,40 +110,44 @@ export default function HomeClient() {
           onClick={() => setIsSidebarVisible(false)}
         />
       )}
-      
+
       <main
-        className={
-          isSidebarVisible
-            ? `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${isTransitionEnabled ? "transition-[padding-left,padding-bottom] duration-200" : ""} md:pl-80 md:pb-0 pl-0 pb-[70vh]`
-            : `flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${isTransitionEnabled ? "transition-[padding-left,padding-bottom] duration-200" : ""} md:pl-0 md:pb-0 pl-0 pb-0`
-        }
+        className={cn(
+          "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
+          isTransitionEnabled && "transition-[padding-left] duration-200",
+          isSidebarVisible && "md:pl-80"
+        )}
       >
         <header className="flex h-16 items-center justify-between border-b border-zinc-700 px-2">
           <button
             type="button"
-            onClick={handleFilterClick}
+            onClick={() => setIsSidebarVisible((current) => !current)}
             aria-expanded={isSidebarVisible}
+            aria-label={isSidebarVisible ? "Hide filters" : "Show filters"}
             className="rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
           >
             <span className="relative z-10 flex items-center justify-center">
-              <SlidersHorizontal size={16} />
+              <SlidersHorizontal size={16} aria-hidden="true" />
             </span>
           </button>
 
-          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setCurrentPage} />
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => window.open("https://discord.gg/QPMguJNTsG", "_blank")}
-              className="rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800 aspect-square"
+            <a
+              href="https://discord.gg/QPMguJNTsG"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Join the Discord server"
+              className="inline-flex aspect-square items-center justify-center rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
             >
-              <img 
+              <img
                 src="/discord.svg"
-                width="16" 
-                height="16" 
+                alt=""
+                width="16"
+                height="16"
               />
-            </button>
+            </a>
 
             <button
               type="button"
@@ -170,24 +155,16 @@ export default function HomeClient() {
                 setSelectedCard(null);
                 setIsCreditsVisible(true);
               }}
-              aria-expanded={isCreditsVisible}
+              aria-haspopup="dialog"
+              aria-label="Open credits"
               className="rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
             >
-              <ScrollText size={16} />
+              <ScrollText size={16} aria-hidden="true" />
             </button>
           </div>
         </header>
-        
-        <CardsGrid
-          cards={allCars}
-          isLoading={isLoading}
-          search={filters?.search ?? ""}
-          filters={filters}
-          page={currentPage}
-          pageSize={pageSize}
-          onTotalItemsChange={setTotalItems}
-          onCardClick={setSelectedCard}
-        />
+
+        <CardsGrid cards={pagedRows} page={page} onCardClick={setSelectedCard} />
 
         {selectedCard ? <MainCard card={selectedCard} onBack={() => setSelectedCard(null)} /> : null}
         {isCreditsVisible ? <Credits onBack={() => setIsCreditsVisible(false)} /> : null}

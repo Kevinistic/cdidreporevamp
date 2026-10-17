@@ -7,6 +7,8 @@ const description =
   "Browse every car in Car Driving Indonesia (CDID) on Roblox. Search and filter by price, dealership, gamepass, limited status, and event or removed cars.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://cdidrepo.vercel.app"),
+  alternates: { canonical: "/" },
   title,
   description,
   keywords: ["CDID", "Car Driving Indonesia", "Roblox", "car list", "car prices", "dealership", "gamepass"],

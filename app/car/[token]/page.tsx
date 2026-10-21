@@ -15,13 +15,31 @@ export async function generateMetadata({ params }: CarPageProps): Promise<Metada
   if (!car) return {};
 
   const title = `${car.CarName} | CDID Car Database (Unofficial)`;
-  const description = `${car.CarName} in Car Driving Indonesia: Rp. ${car.Price.toLocaleString("de-DE")}, ${car.Dealership || "no dealership"}, ${car.Engine || "engine unknown"}.`;
+  const status = [car.Legacy && "No longer in-game", car.Inaccurate && "May be inaccurate"].filter(Boolean).join(" · ");
+  // Discord keeps newlines in the description, so each detail gets its own line next to the thumbnail.
+  const description = [
+    `Rp. ${car.Price.toLocaleString("de-DE")}`,
+    `Dealership: ${car.Dealership || "N/A"}`,
+    `Limited: ${car.Limited ?? "No"}`,
+    `Gamepass: ${car.Gamepass ?? "No"}`,
+    `Engine: ${car.Engine || "N/A"}`,
+    status,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  // "summary" card + small square image = text on the left, thumbnail on the right.
   return {
     title,
     description,
     alternates: { canonical: `/car/${token}` },
-    openGraph: { title, description, type: "website", images: car.CarImageUrl ? [car.CarImageUrl] : undefined },
-    twitter: { card: "summary", title, description },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      siteName: "CDID Car Database (Unofficial)",
+      images: car.CarImageUrl ? [{ url: car.CarImageUrl, width: 250, height: 250, alt: car.CarName }] : undefined,
+    },
+    twitter: { card: "summary", title, description, images: car.CarImageUrl ? [car.CarImageUrl] : undefined },
   };
 }
 

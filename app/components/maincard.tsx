@@ -1,22 +1,15 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import type { CardItem } from "./card";
 import { Modal } from "./modal";
 
-type MainCardProps = {
-  card: CardItem;
-  onBack: () => void;
-};
+export const CAR_MODAL_CONTENT_CLASS = "gap-6 md:flex-row md:items-center md:justify-between";
 
-export function MainCard({ card, onBack }: MainCardProps) {
+export function CarDetails({ card }: { card: CardItem }) {
   return (
-    <Modal
-      label={card.CarName}
-      onClose={onBack}
-      className="max-w-4xl"
-      contentClassName="gap-6 md:flex-row md:items-center md:justify-between"
-    >
+    <>
       <div className="flex-1 space-y-4">
         <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Car Details</p>
         <h2 className="text-3xl font-bold">{card.CarName}</h2>
@@ -61,6 +54,23 @@ export function MainCard({ card, onBack }: MainCardProps) {
           </div>
         </div>
       ) : null}
+    </>
+  );
+}
+
+// Intercepted /car/[token] closes with a history step back to the grid. On a direct load there is
+// no grid entry behind it, so the page passes `closeTo` to go home instead.
+export function CarModal({ card, closeTo }: { card: CardItem; closeTo?: string }) {
+  const router = useRouter();
+
+  return (
+    <Modal
+      label={card.CarName}
+      onClose={() => (closeTo ? router.replace(closeTo) : router.back())}
+      className="max-w-4xl"
+      contentClassName={CAR_MODAL_CONTENT_CLASS}
+    >
+      <CarDetails card={card} />
     </Modal>
   );
 }

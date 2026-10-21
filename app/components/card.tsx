@@ -1,5 +1,6 @@
 export type CardItem = {
   _id: string;
+  token: string;
   CarName: string;
   Price: number;
   CarImageUrl?: string;

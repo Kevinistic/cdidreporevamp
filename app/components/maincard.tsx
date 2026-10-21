@@ -1,11 +1,43 @@
 "use client";
 
+import { Check, SquareArrowOutUpRight } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import type { CardItem } from "./card";
 import { Modal } from "./modal";
 
 export const CAR_MODAL_CONTENT_CLASS = "gap-6 md:flex-row md:items-center md:justify-between";
+
+function ShareButton({ token }: { token: string }) {
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/car/${token}`);
+    } catch {
+      return;
+    }
+    setCopied(true);
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={copyLink}
+      aria-label={copied ? "Link copied" : "Copy link to this car"}
+      title={copied ? "Link copied" : "Copy link"}
+      className="rounded-md border border-zinc-600 bg-zinc-900 p-2 text-white hover:bg-zinc-800"
+    >
+      {copied ? <Check size={16} /> : <SquareArrowOutUpRight size={16} />}
+    </button>
+  );
+}
 
 export function CarDetails({ card }: { card: CardItem }) {
   return (
@@ -69,6 +101,7 @@ export function CarModal({ card, closeTo }: { card: CardItem; closeTo?: string }
       onClose={() => (closeTo ? router.replace(closeTo) : router.back())}
       className="max-w-4xl"
       contentClassName={CAR_MODAL_CONTENT_CLASS}
+      actions={<ShareButton token={card.token} />}
     >
       <CarDetails card={card} />
     </Modal>

@@ -11,10 +11,11 @@ type ModalProps = {
   onClose: () => void;
   className?: string;
   contentClassName?: string;
+  actions?: React.ReactNode;
   children: React.ReactNode;
 };
 
-export function Modal({ label, onClose, className, contentClassName, children }: ModalProps) {
+export function Modal({ label, onClose, className, contentClassName, actions, children }: ModalProps) {
   const dialogRef = useRef<HTMLElement>(null);
 
   const onCloseRef = useRef(onClose);
@@ -79,13 +80,16 @@ export function Modal({ label, onClose, className, contentClassName, children }:
         )}
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute left-4 top-4 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800"
-        >
-          Back
-        </button>
+        <div className="absolute left-4 top-4 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-zinc-600 bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800"
+          >
+            Back
+          </button>
+          {actions}
+        </div>
 
         <div
           className={cn(

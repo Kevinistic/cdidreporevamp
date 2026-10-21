@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: CarPageProps): Promise<Metada
   const car = await getCarByToken(token);
   if (!car) return {};
 
-  const title = `${car.CarName} | CDID Car Database (Unofficial)`;
+  const title = `${car.CarName}`;
   const status = [car.Legacy && "No longer in-game", car.Inaccurate && "May be inaccurate"].filter(Boolean).join(" · ");
   // Discord keeps newlines in the description, so each detail gets its own line next to the thumbnail.
   const description = [

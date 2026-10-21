@@ -17,6 +17,7 @@ Put these in `.env` (the fetch script also reads `.env` directly when run locall
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase key used to read the view |
 | `NEXT_PUBLIC_SUPABASE_VIEW_NAME` | Name of the table or view holding the cars |
+| `CAR_TOKEN_SECRET` | Secret used to derive the obfuscated `/car/<token>` URLs from each `_id`. Required for production builds; changing it changes every car URL |
 
 ## Local development
 

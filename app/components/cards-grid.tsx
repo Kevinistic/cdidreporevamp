@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import type { CardItem } from "./card";
 import { cn } from "../lib/cn";
@@ -8,10 +9,9 @@ import { cn } from "../lib/cn";
 type CardsGridProps = {
   cards: CardItem[];
   page: number;
-  onCardClick?: (card: CardItem) => void;
 };
 
-export function CardsGrid({ cards, page, onCardClick }: CardsGridProps) {
+export function CardsGrid({ cards, page }: CardsGridProps) {
   const gridRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -30,10 +30,9 @@ export function CardsGrid({ cards, page, onCardClick }: CardsGridProps) {
       ) : null}
       <div className="grid gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {cards.map((card) => (
-          <button
+          <Link
             key={card._id}
-            type="button"
-            onClick={() => onCardClick?.(card)}
+            href={`/car/${card.token}`}
             className={cn(
               "flex h-full flex-col justify-between rounded-lg border border-zinc-700 hover:border-zinc-500 p-2 text-white shadow-sm",
               card.Legacy ? "bg-[#230405]" : "bg-zinc-950"
@@ -54,7 +53,7 @@ export function CardsGrid({ cards, page, onCardClick }: CardsGridProps) {
                 />
               </div>
             )}
-          </button>
+          </Link>
         ))}
       </div>
     </section>

@@ -9,6 +9,7 @@ const description =
 export const metadata: Metadata = {
   metadataBase: new URL("https://cdidrepo.vercel.app"),
   alternates: { canonical: "/" },
+  verification: { google: "o-9If2ceDADp2A5IdRoaaJIveYK97SMG3QWfYUq0Ri8" },
   title,
   description,
   keywords: ["CDID", "Car Driving Indonesia", "Roblox", "car list", "car prices", "dealership", "gamepass"],

@@ -7,7 +7,6 @@ import type { CardItem } from "./card";
 import type { Filters } from "./sidebar-filters";
 import { SlidersHorizontal, ScrollText } from 'lucide-react';
 import { Pagination } from "./pagination-bar";
-import { MainCard } from "./maincard";
 import { Credits } from "./credits";
 import { cn } from "../lib/cn";
 import { useFilteredCars } from "../lib/use-filtered-cars";
@@ -23,7 +22,6 @@ export default function HomeClient({ cars }: HomeClientProps) {
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(false);
   const [filters, setFilters] = useState<Filters | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCard, setSelectedCard] = useState<CardItem | null>(null);
   const [isCreditsVisible, setIsCreditsVisible] = useState(false);
 
   useEffect(() => {
@@ -151,10 +149,7 @@ export default function HomeClient({ cars }: HomeClientProps) {
 
             <button
               type="button"
-              onClick={() => {
-                setSelectedCard(null);
-                setIsCreditsVisible(true);
-              }}
+              onClick={() => setIsCreditsVisible(true)}
               aria-haspopup="dialog"
               aria-label="Open credits"
               className="rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
@@ -164,9 +159,8 @@ export default function HomeClient({ cars }: HomeClientProps) {
           </div>
         </header>
 
-        <CardsGrid cards={pagedRows} page={page} onCardClick={setSelectedCard} />
+        <CardsGrid cards={pagedRows} page={page} />
 
-        {selectedCard ? <MainCard card={selectedCard} onBack={() => setSelectedCard(null)} /> : null}
         {isCreditsVisible ? <Credits onBack={() => setIsCreditsVisible(false)} /> : null}
       </main>
     </div>

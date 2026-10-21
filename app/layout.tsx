@@ -28,13 +28,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
+  modal: React.ReactNode;
 }>) {
   return (
     <html lang="en" className="h-full overflow-hidden">
       <body className="flex h-full w-full overflow-hidden">
         {children}
+        {modal}
         <Analytics />
       </body>
     </html>

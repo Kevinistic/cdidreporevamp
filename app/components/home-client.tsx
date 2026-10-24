@@ -18,7 +18,9 @@ type HomeClientProps = {
 };
 
 export default function HomeClient({ cars }: HomeClientProps) {
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  // null until mounted: the server can't know the screen width, so CSS picks the default
+  // (open on desktop, closed on mobile) and the first paint already matches the screen.
+  const [isSidebarVisible, setIsSidebarVisible] = useState<boolean | null>(null);
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(false);
   const [filters, setFilters] = useState<Filters | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,9 +28,7 @@ export default function HomeClient({ cars }: HomeClientProps) {
 
   useEffect(() => {
     // 1. Closed by default on mobile (breakpoint 768px matches Tailwind md)
-    if (window.innerWidth < 768) {
-      setIsSidebarVisible(false);
-    }
+    setIsSidebarVisible(window.innerWidth >= 768);
     // 2. Enable transitions after a brief delay to prevent slide on mount
     const transitionTimer = setTimeout(() => {
       setIsTransitionEnabled(true);
@@ -80,11 +80,12 @@ export default function HomeClient({ cars }: HomeClientProps) {
   return (
     <div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
       <aside
-        inert={!isSidebarVisible}
+        inert={isSidebarVisible === false}
         className={cn(
           "fixed bottom-0 left-0 right-0 z-40 h-[70dvh] overflow-hidden border-t border-zinc-700 bg-black/95 p-4 backdrop-blur-md md:top-0 md:h-full md:w-80 md:border-r md:border-t-0",
           isTransitionEnabled && "transition-transform duration-200",
-          !isSidebarVisible && "translate-y-full md:translate-y-0 md:-translate-x-full"
+          isSidebarVisible === null && "max-md:translate-y-full",
+          isSidebarVisible === false && "translate-y-full md:translate-y-0 md:-translate-x-full"
         )}
       >
         <div className="flex h-full w-full flex-col">
@@ -113,14 +114,14 @@ export default function HomeClient({ cars }: HomeClientProps) {
         className={cn(
           "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
           isTransitionEnabled && "transition-[padding-left] duration-200",
-          isSidebarVisible && "md:pl-80"
+          isSidebarVisible !== false && "md:pl-80"
         )}
       >
         <header className="flex h-16 items-center justify-between border-b border-zinc-700 px-2">
           <button
             type="button"
             onClick={() => setIsSidebarVisible((current) => !current)}
-            aria-expanded={isSidebarVisible}
+            aria-expanded={isSidebarVisible === true}
             aria-label={isSidebarVisible ? "Hide filters" : "Show filters"}
             className="rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
           >
@@ -159,7 +160,7 @@ export default function HomeClient({ cars }: HomeClientProps) {
           </div>
         </header>
 
-        <CardsGrid cards={pagedRows} page={page} />
+        <CardsGrid cards={pagedRows} />
 
         {isCreditsVisible ? <Credits onBack={() => setIsCreditsVisible(false)} /> : null}
       </main>

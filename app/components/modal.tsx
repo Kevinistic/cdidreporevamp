@@ -17,6 +17,9 @@ type ModalProps = {
 
 export function Modal({ label, onClose, className, contentClassName, actions, children }: ModalProps) {
   const dialogRef = useRef<HTMLElement>(null);
+  // A drag that starts inside the dialog and ends on the backdrop still clicks the backdrop,
+  // so only close when the press also started there.
+  const pressedBackdropRef = useRef(false);
 
   const onCloseRef = useRef(onClose);
   useEffect(() => {
@@ -66,7 +69,12 @@ export function Modal({ label, onClose, className, contentClassName, actions, ch
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md"
-      onClick={onClose}
+      onPointerDown={(event) => {
+        pressedBackdropRef.current = event.target === event.currentTarget;
+      }}
+      onClick={(event) => {
+        if (pressedBackdropRef.current && event.target === event.currentTarget) onClose();
+      }}
     >
       <section
         ref={dialogRef}
@@ -78,7 +86,6 @@ export function Modal({ label, onClose, className, contentClassName, actions, ch
           "relative flex h-[80dvh] w-[90vw] flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950 text-white shadow-2xl focus:outline-none md:h-3/5 md:w-1/2",
           className
         )}
-        onClick={(event) => event.stopPropagation()}
       >
         <div className="absolute left-4 top-4 flex items-center gap-2">
           <button

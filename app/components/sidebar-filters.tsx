@@ -447,8 +447,9 @@ export function SidebarFilters({
       {/* Footer ticker */}
       <div className="mt-auto shrink-0 pt-6 text-xs text-zinc-500">
         <div className="overflow-hidden whitespace-nowrap">
+          {/* pr-6 adds the missing sixth gap, so -50% lands exactly on the start of the second copy */}
           <div
-            className="flex w-max items-center gap-6"
+            className="flex w-max items-center gap-6 pr-6"
             style={{ animation: "sidebar-footer-ticker 18s linear infinite" }}
           >
             <span>Made with ❤️ by aoderu</span>

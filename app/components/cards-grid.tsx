@@ -8,15 +8,15 @@ import { cn } from "../lib/cn";
 
 type CardsGridProps = {
   cards: CardItem[];
-  page: number;
 };
 
-export function CardsGrid({ cards, page }: CardsGridProps) {
+export function CardsGrid({ cards }: CardsGridProps) {
   const gridRef = useRef<HTMLElement>(null);
 
+  // Keyed on the rows rather than the page number, so a filter change on page 1 also scrolls to the top.
   useEffect(() => {
     gridRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
+  }, [cards]);
 
   return (
     <section

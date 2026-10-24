@@ -94,11 +94,25 @@ export function CarDetails({ card }: { card: CardItem }) {
 // no grid entry behind it, so the page passes `closeTo` to go home instead.
 export function CarModal({ card, closeTo }: { card: CardItem; closeTo?: string }) {
   const router = useRouter();
+  // The modal stays up until the navigation lands, so a double click or held Escape would
+  // otherwise step back twice and leave the grid.
+  const closingRef = useRef(false);
+
+  useEffect(() => {
+    closingRef.current = false;
+  }, []);
+
+  const close = () => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    if (closeTo) router.replace(closeTo);
+    else router.back();
+  };
 
   return (
     <Modal
       label={card.CarName}
-      onClose={() => (closeTo ? router.replace(closeTo) : router.back())}
+      onClose={close}
       className="max-w-4xl"
       contentClassName={CAR_MODAL_CONTENT_CLASS}
       actions={<ShareButton token={card.token} />}

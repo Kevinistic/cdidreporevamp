@@ -7,7 +7,7 @@ type DropdownOption = {
   value: string;
 };
 
-type SectionKey = "types" | "filters" | "price" | "sortBy";
+type SectionKey = "filters" | "price" | "sortBy";
 
 type PriceRange = {
   min: string;
@@ -17,11 +17,10 @@ type PriceRange = {
 const DEFAULT_SORT_BY = "price-desc";
 
 const TYPE_OPTIONS: DropdownOption[] = [
-  { label: "All Cars", value: "all" },
-  { label: "New Cars", value: "new" },
-  { label: "Event Cars", value: "event" },
-  { label: "Minigame Cars", value: "minigame" },
-  { label: "Removed Cars", value: "removed" },
+  { label: "New", value: "new" },
+  { label: "Event", value: "event" },
+  { label: "Minigame", value: "minigame" },
+  { label: "Removed", value: "removed" },
 ];
 
 const SORT_OPTIONS: DropdownOption[] = [
@@ -56,7 +55,7 @@ export type Filters = {
   dealerships: FilterState;
   priceRange: PriceRange;
   sortBy: string;
-  type: string;
+  types: FilterState;
 };
 
 type SidebarFiltersProps = {
@@ -249,12 +248,12 @@ export function SidebarFilters({
   limitedOptions = [],
   gamepassOptions = [],
 }: SidebarFiltersProps) {
-  const [activeSection, setActiveSection] = useState<SectionKey>("types");
+  const [activeSection, setActiveSection] = useState<SectionKey>("filters");
 
   const defaultPriceRange = useMemo<PriceRange>(() => ({ min: "0", max: String(maxPrice) }), [maxPrice]);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState<string>("all");
+  const [typeStates, setTypeStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [limitedStates, setLimitedStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [gamepassStates, setGamepassStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [dealershipStates, setDealershipStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
@@ -264,9 +263,9 @@ export function SidebarFilters({
   const [sortByValue, setSortByValue] = useState<string>(DEFAULT_SORT_BY);
 
   const handleReset = () => {
-    setActiveSection("types");
+    setActiveSection("filters");
     setSearchQuery("");
-    setSelectedType("all");
+    setTypeStates({});
     setLimitedStates({});
     setGamepassStates({});
     setDealershipStates({});
@@ -296,20 +295,20 @@ export function SidebarFilters({
 
   const activeContent = (() => {
     switch (activeSection) {
-      case "types":
-        return (
-          <RadioPanel
-            options={TYPE_OPTIONS}
-            selectedValue={selectedType}
-            onSelect={setSelectedType}
-            name="types"
-          />
-        );
       case "filters":
         return (
           <div className="space-y-6">
+            <div>
+              <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Type</span>
+              <MultistatePanel
+                options={TYPE_OPTIONS}
+                states={typeStates}
+                onToggle={(value) => toggleOption(setTypeStates, value)}
+              />
+            </div>
+
             {limitedOptions.length > 0 && (
-              <div>
+              <div className="border-t border-zinc-800/60 pt-4">
                 <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Limited</span>
                 <MultistatePanel
                   options={limitedOptions}
@@ -394,9 +393,9 @@ export function SidebarFilters({
       dealerships: getFilterState(dealershipStates),
       priceRange,
       sortBy: sortByValue,
-      type: selectedType,
+      types: getFilterState(typeStates),
     });
-  }, [searchQuery, limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, selectedType]);
+  }, [searchQuery, limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, typeStates]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -419,12 +418,7 @@ export function SidebarFilters({
         </button>
       </div>
 
-      <div className="mt-6 grid grid-cols-4">
-        <SectionButton
-          label="Types"
-          active={activeSection === "types"}
-          onClick={() => setActiveSection("types")}
-        />
+      <div className="mt-6 grid grid-cols-3">
         <SectionButton
           label="Filters"
           active={activeSection === "filters"}

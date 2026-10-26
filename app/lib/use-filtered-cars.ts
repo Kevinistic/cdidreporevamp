@@ -16,6 +16,13 @@ function matchesFilterState(value: string, { included, excluded }: FilterState) 
   return !excluded.includes(value);
 }
 
+// Includes are OR (event and minigame never overlap); excludes are AND.
+function matchesTypes(card: CardItem, { included, excluded }: FilterState) {
+  if (excluded.some((type) => TYPE_PREDICATES[type]?.(card))) return false;
+  if (included.length === 0) return true;
+  return included.some((type) => TYPE_PREDICATES[type]?.(card));
+}
+
 function compareCars(sortBy: string) {
   return (a: CardItem, b: CardItem) => {
     if (sortBy === "name-asc") {
@@ -38,7 +45,6 @@ function filterAndSortCars(cars: CardItem[], filters: Filters | undefined) {
   }
 
   const query = filters.search.trim().toLowerCase();
-  const typePredicate = TYPE_PREDICATES[filters.type];
   const minPrice = parseFloat(filters.priceRange.min);
   const maxPrice = parseFloat(filters.priceRange.max);
 
@@ -48,7 +54,7 @@ function filterAndSortCars(cars: CardItem[], filters: Filters | undefined) {
       if (!matchesFilterState(card.Dealership, filters.dealerships)) return false;
       if (!matchesFilterState(card.Limited, filters.limiteds)) return false;
       if (!matchesFilterState(card.Gamepass, filters.gamepasses)) return false;
-      if (typePredicate && !typePredicate(card)) return false;
+      if (!matchesTypes(card, filters.types)) return false;
       if (!Number.isNaN(minPrice) && minPrice > 0 && card.Price < minPrice) return false;
       if (!Number.isNaN(maxPrice) && maxPrice > 0 && card.Price > maxPrice) return false;
       return true;

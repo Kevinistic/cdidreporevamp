@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowDown, ArrowUp, ChevronDown } from "lucide-react";
 
 type DropdownOption = {
   label: string;
   value: string;
 };
 
-type SectionKey = "filters" | "price" | "sortBy";
+type SectionKey = "type" | "limited" | "gamepass" | "dealership" | "price" | "sortBy";
 
 type PriceRange = {
   min: string;
@@ -16,6 +17,15 @@ type PriceRange = {
 
 const DEFAULT_SORT_BY = "price-desc";
 
+const DEFAULT_OPEN_SECTIONS: Record<SectionKey, boolean> = {
+  type: true,
+  limited: false,
+  gamepass: false,
+  dealership: false,
+  price: false,
+  sortBy: false,
+};
+
 const TYPE_OPTIONS: DropdownOption[] = [
   { label: "New", value: "new" },
   { label: "Event", value: "event" },
@@ -23,11 +33,16 @@ const TYPE_OPTIONS: DropdownOption[] = [
   { label: "Removed", value: "removed" },
 ];
 
-const SORT_OPTIONS: DropdownOption[] = [
-  { label: "Name: A to Z", value: "name-asc" },
-  { label: "Name: Z to A", value: "name-desc" },
-  { label: "Price: Low to High", value: "price-asc" },
-  { label: "Price: High to Low", value: "price-desc" },
+type SortOption = DropdownOption & {
+  field: string;
+  direction: "asc" | "desc";
+};
+
+const SORT_OPTIONS: SortOption[] = [
+  { label: "Name: A to Z", value: "name-asc", field: "Name", direction: "asc" },
+  { label: "Name: Z to A", value: "name-desc", field: "Name", direction: "desc" },
+  { label: "Price: Low to High", value: "price-asc", field: "Price", direction: "asc" },
+  { label: "Price: High to Low", value: "price-desc", field: "Price", direction: "desc" },
 ];
 
 function formatPrice(value: string) {
@@ -202,28 +217,76 @@ function RadioPanel({
   );
 }
 
-function SectionButton({
+function FilterSection({
   label,
-  active,
-  onClick,
+  summary,
+  open,
+  onToggle,
+  children,
 }: {
   label: string;
-  active: boolean;
-  onClick: () => void;
+  summary?: React.ReactNode;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`shrink-0 w-full items-center px-2 py-2 text-center text-xs font-medium whitespace-nowrap transition ${
-        active
-          ? "bg-zinc-700 text-white"
-          : "bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
-      }`}
-    >
-      <span>{label}</span>
-    </button>
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 py-3 text-left"
+      >
+        <span className="shrink-0 text-zinc-300 text-xs uppercase tracking-[0.2em]">{label}</span>
+        <span className="flex min-w-0 items-center gap-2">
+          {summary}
+          <ChevronDown
+            aria-hidden="true"
+            className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        </span>
+      </button>
+      {open && <div className="pb-4">{children}</div>}
+    </div>
+  );
+}
+
+// collapsed headers show how many options are included/excluded so active filters stay visible
+function FilterStateSummary({ states }: { states: Record<string, "include" | "exclude" | "neutral"> }) {
+  const { included, excluded } = getFilterState(states);
+  return (
+    <>
+      {included.length > 0 && (
+        <span className="rounded-full bg-emerald-950/40 px-2 text-xs font-medium text-emerald-400">
+          +{included.length}
+          <span className="sr-only"> included</span>
+        </span>
+      )}
+      {excluded.length > 0 && (
+        <span className="rounded-full bg-rose-950/40 px-2 text-xs font-medium text-rose-400">
+          −{excluded.length}
+          <span className="sr-only"> excluded</span>
+        </span>
+      )}
+    </>
+  );
+}
+
+function TextSummary({ text }: { text: string }) {
+  return <span className="truncate text-xs text-zinc-400">{text}</span>;
+}
+
+// svg arrows instead of unicode so they render the same on every device
+function SortSummary({ option }: { option?: SortOption }) {
+  if (!option) return null;
+  const Arrow = option.direction === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <span className="flex items-center gap-1 text-xs text-zinc-400">
+      <span aria-hidden="true">{option.field}</span>
+      <Arrow aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+      <span className="sr-only">{option.label}</span>
+    </span>
   );
 }
 
@@ -248,7 +311,7 @@ export function SidebarFilters({
   limitedOptions = [],
   gamepassOptions = [],
 }: SidebarFiltersProps) {
-  const [activeSection, setActiveSection] = useState<SectionKey>("filters");
+  const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>(DEFAULT_OPEN_SECTIONS);
 
   const defaultPriceRange = useMemo<PriceRange>(() => ({ min: "0", max: String(maxPrice) }), [maxPrice]);
 
@@ -263,7 +326,7 @@ export function SidebarFilters({
   const [sortByValue, setSortByValue] = useState<string>(DEFAULT_SORT_BY);
 
   const handleReset = () => {
-    setActiveSection("filters");
+    setOpenSections(DEFAULT_OPEN_SECTIONS);
     setSearchQuery("");
     setTypeStates({});
     setLimitedStates({});
@@ -293,92 +356,122 @@ export function SidebarFilters({
     });
   };
 
-  const activeContent = (() => {
-    switch (activeSection) {
-      case "filters":
-        return (
-          <div className="space-y-6">
-            <div>
-              <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Type</span>
-              <MultistatePanel
-                options={TYPE_OPTIONS}
-                states={typeStates}
-                onToggle={(value) => toggleOption(setTypeStates, value)}
-              />
-            </div>
+  const toggleSection = (key: SectionKey) => {
+    setOpenSections((current) => ({ ...current, [key]: !current[key] }));
+  };
 
-            {limitedOptions.length > 0 && (
-              <div className="border-t border-zinc-800/60 pt-4">
-                <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Limited</span>
-                <MultistatePanel
-                  options={limitedOptions}
-                  states={limitedStates}
-                  onToggle={(value) => toggleOption(setLimitedStates, value)}
-                />
-              </div>
-            )}
+  const isPriceRangeActive = priceRange.min !== "0" || priceRange.max !== defaultPriceRange.max;
+  const selectedSortOption = SORT_OPTIONS.find((option) => option.value === sortByValue);
 
-            {gamepassOptions.length > 0 && (
-              <div className="border-t border-zinc-800/60 pt-4">
-                <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Gamepass</span>
-                <MultistatePanel
-                  options={gamepassOptions}
-                  states={gamepassStates}
-                  onToggle={(value) => toggleOption(setGamepassStates, value)}
-                />
-              </div>
-            )}
+  const sections = (
+    <div className="divide-y divide-zinc-800/60">
+      <FilterSection
+        label="Type"
+        summary={<FilterStateSummary states={typeStates} />}
+        open={openSections.type}
+        onToggle={() => toggleSection("type")}
+      >
+        <MultistatePanel
+          options={TYPE_OPTIONS}
+          states={typeStates}
+          onToggle={(value) => toggleOption(setTypeStates, value)}
+        />
+      </FilterSection>
 
-            {dealershipOptions.length > 0 && (
-              <div className="border-t border-zinc-800/60 pt-4">
-                <span className="block text-zinc-300 text-xs uppercase tracking-[0.2em] mb-2">Dealership</span>
-                <MultistatePanel
-                  options={dealershipOptions}
-                  states={dealershipStates}
-                  onToggle={(value) => toggleOption(setDealershipStates, value)}
-                />
-              </div>
-            )}
-          </div>
-        );
-      case "price":
-        return (
-          <PricePanel
-            minPrice={priceFocused.min ? priceInput.min : formatPrice(priceRange.min)}
-            maxPrice={priceFocused.max ? priceInput.max : formatPrice(priceRange.max)}
-            onMinChange={(value) => setPriceInput((current) => ({ ...current, min: value }))}
-            onMaxChange={(value) => setPriceInput((current) => ({ ...current, max: value }))}
-            onMinFocus={() => {
-              setPriceFocused((current) => ({ ...current, min: true }));
-              setPriceInput((current) => ({ ...current, min: priceRange.min }));
-            }}
-            onMaxFocus={() => {
-              setPriceFocused((current) => ({ ...current, max: true }));
-              setPriceInput((current) => ({ ...current, max: priceRange.max }));
-            }}
-            onMinBlur={() => {
-              setPriceFocused((current) => ({ ...current, min: false }));
-              setPriceRange((current) => ({ ...current, min: priceInput.min || "0" }));
-            }}
-            onMaxBlur={() => {
-              setPriceFocused((current) => ({ ...current, max: false }));
-              setPriceRange((current) => ({ ...current, max: priceInput.max || defaultPriceRange.max }));
-            }}
+      {limitedOptions.length > 0 && (
+        <FilterSection
+          label="Limited"
+          summary={<FilterStateSummary states={limitedStates} />}
+          open={openSections.limited}
+          onToggle={() => toggleSection("limited")}
+        >
+          <MultistatePanel
+            options={limitedOptions}
+            states={limitedStates}
+            onToggle={(value) => toggleOption(setLimitedStates, value)}
           />
-        );
-      case "sortBy":
-        return (
-          <RadioPanel
-            options={SORT_OPTIONS}
-            selectedValue={sortByValue}
-            onSelect={setSortByValue}
-            name="sort-by"
+        </FilterSection>
+      )}
+
+      {gamepassOptions.length > 0 && (
+        <FilterSection
+          label="Gamepass"
+          summary={<FilterStateSummary states={gamepassStates} />}
+          open={openSections.gamepass}
+          onToggle={() => toggleSection("gamepass")}
+        >
+          <MultistatePanel
+            options={gamepassOptions}
+            states={gamepassStates}
+            onToggle={(value) => toggleOption(setGamepassStates, value)}
           />
-        );
-      default:
-        return null;
-    }
-  })();
+        </FilterSection>
+      )}
+
+      {dealershipOptions.length > 0 && (
+        <FilterSection
+          label="Dealership"
+          summary={<FilterStateSummary states={dealershipStates} />}
+          open={openSections.dealership}
+          onToggle={() => toggleSection("dealership")}
+        >
+          <MultistatePanel
+            options={dealershipOptions}
+            states={dealershipStates}
+            onToggle={(value) => toggleOption(setDealershipStates, value)}
+          />
+        </FilterSection>
+      )}
+
+      <FilterSection
+        label="Price"
+        summary={
+          isPriceRangeActive && (
+            <TextSummary text={`${formatPrice(priceRange.min) || "0"} – ${formatPrice(priceRange.max) || "0"}`} />
+          )
+        }
+        open={openSections.price}
+        onToggle={() => toggleSection("price")}
+      >
+        <PricePanel
+          minPrice={priceFocused.min ? priceInput.min : formatPrice(priceRange.min)}
+          maxPrice={priceFocused.max ? priceInput.max : formatPrice(priceRange.max)}
+          onMinChange={(value) => setPriceInput((current) => ({ ...current, min: value }))}
+          onMaxChange={(value) => setPriceInput((current) => ({ ...current, max: value }))}
+          onMinFocus={() => {
+            setPriceFocused((current) => ({ ...current, min: true }));
+            setPriceInput((current) => ({ ...current, min: priceRange.min }));
+          }}
+          onMaxFocus={() => {
+            setPriceFocused((current) => ({ ...current, max: true }));
+            setPriceInput((current) => ({ ...current, max: priceRange.max }));
+          }}
+          onMinBlur={() => {
+            setPriceFocused((current) => ({ ...current, min: false }));
+            setPriceRange((current) => ({ ...current, min: priceInput.min || "0" }));
+          }}
+          onMaxBlur={() => {
+            setPriceFocused((current) => ({ ...current, max: false }));
+            setPriceRange((current) => ({ ...current, max: priceInput.max || defaultPriceRange.max }));
+          }}
+        />
+      </FilterSection>
+
+      <FilterSection
+        label="Sort by"
+        summary={<SortSummary option={selectedSortOption} />}
+        open={openSections.sortBy}
+        onToggle={() => toggleSection("sortBy")}
+      >
+        <RadioPanel
+          options={SORT_OPTIONS}
+          selectedValue={sortByValue}
+          onSelect={setSortByValue}
+          name="sort-by"
+        />
+      </FilterSection>
+    </div>
+  );
 
   const onChangeRef = useRef(onChange);
   useEffect(() => {
@@ -418,25 +511,7 @@ export function SidebarFilters({
         </button>
       </div>
 
-      <div className="mt-6 grid grid-cols-3">
-        <SectionButton
-          label="Filters"
-          active={activeSection === "filters"}
-          onClick={() => setActiveSection("filters")}
-        />
-        <SectionButton
-          label="Price"
-          active={activeSection === "price"}
-          onClick={() => setActiveSection("price")}
-        />
-        <SectionButton
-          label="Sort by"
-          active={activeSection === "sortBy"}
-          onClick={() => setActiveSection("sortBy")}
-        />
-      </div>
-
-      <div className="mt-6 flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-zinc-600 border-t border-zinc-700 pt-4">{activeContent}</div>
+      <div className="mt-6 flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-zinc-600 border-t border-zinc-700 pt-1">{sections}</div>
 
       {/* Footer ticker */}
       <div className="mt-auto shrink-0 pt-6 text-xs text-zinc-500">

@@ -43,11 +43,17 @@ export default function HomeClient({ cars }: HomeClientProps) {
   const total = filteredCars.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const page = Math.min(currentPage, totalPages);
+  const pageStart = (page - 1) * PAGE_SIZE;
 
-  const pagedRows = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return filteredCars.slice(start, start + PAGE_SIZE);
-  }, [filteredCars, page]);
+  const pagedRows = useMemo(
+    () => filteredCars.slice(pageStart, pageStart + PAGE_SIZE),
+    [filteredCars, pageStart]
+  );
+
+  const resultSummary =
+    total === 0
+      ? "Showing 0 cars"
+      : `Showing ${pageStart + 1}–${pageStart + pagedRows.length} of ${total} cars`;
 
   const maxPrice = useMemo(
     () => cars.reduce((max, car) => Math.max(max, car.Price), 0),
@@ -83,7 +89,7 @@ export default function HomeClient({ cars }: HomeClientProps) {
         inert={isSidebarVisible === false}
         className={cn(
           "fixed bottom-0 left-0 right-0 z-40 h-[70dvh] overflow-hidden border-t border-zinc-700 bg-black/95 p-4 backdrop-blur-md md:top-0 md:h-full md:w-80 md:border-r md:border-t-0",
-          isTransitionEnabled && "transition-transform duration-200",
+          isTransitionEnabled && "transition-transform duration-200 motion-reduce:transition-none",
           isSidebarVisible === null && "max-md:translate-y-full",
           isSidebarVisible === false && "translate-y-full md:translate-y-0 md:-translate-x-full"
         )}
@@ -93,7 +99,6 @@ export default function HomeClient({ cars }: HomeClientProps) {
 
           <SidebarFilters
             onChange={handleFiltersChange}
-            carCount={total}
             maxPrice={maxPrice}
             dealershipOptions={dealershipOptions}
             limitedOptions={limitedOptions}
@@ -113,7 +118,7 @@ export default function HomeClient({ cars }: HomeClientProps) {
       <main
         className={cn(
           "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
-          isTransitionEnabled && "transition-[padding-left] duration-200",
+          isTransitionEnabled && "transition-[padding-left] duration-200 motion-reduce:transition-none",
           isSidebarVisible !== false && "md:pl-80"
         )}
       >
@@ -159,6 +164,10 @@ export default function HomeClient({ cars }: HomeClientProps) {
             </button>
           </div>
         </header>
+
+        <div aria-live="polite" className="shrink-0 px-2 pt-2 text-xs text-zinc-500">
+          {resultSummary}
+        </div>
 
         <CardsGrid cards={pagedRows} />
 

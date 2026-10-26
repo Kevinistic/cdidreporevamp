@@ -1,41 +1,80 @@
 "use client";
 
-import { Check, SquareArrowOutUpRight } from "lucide-react";
+import { Check, Link as LinkIcon, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { CardItem } from "./card";
+import { cn } from "../lib/cn";
 import { Modal } from "./modal";
 
 export const CAR_MODAL_CONTENT_CLASS = "gap-6 md:flex-row md:items-center md:justify-between";
 
-function ShareButton({ token }: { token: string }) {
-  const [copied, setCopied] = useState(false);
+type ShareStatus = "idle" | "copied" | "failed";
+
+const SHARE_STATUS_TEXT: Record<ShareStatus, string> = {
+  idle: "Copy link",
+  copied: "Link copied",
+  failed: "Couldn't copy link",
+};
+
+function ShareButton({ token, title }: { token: string; title: string }) {
+  const [status, setStatus] = useState<ShareStatus>("idle");
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/car/${token}`);
-    } catch {
-      return;
-    }
-    setCopied(true);
+  const showStatus = (next: ShareStatus) => {
+    setStatus(next);
     clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setCopied(false), 1500);
+    timeoutRef.current = setTimeout(() => setStatus("idle"), 2000);
   };
 
+  const shareLink = async () => {
+    const url = `${window.location.origin}/car/${token}`;
+
+    // Touch devices get the native share sheet. Desktop browsers have navigator.share too,
+    // but people there expect a plain copy.
+    if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch (error) {
+        // Closing the sheet rejects with AbortError, which isn't a failure.
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      showStatus("copied");
+    } catch {
+      showStatus("failed");
+    }
+  };
+
+  const StatusIcon = status === "copied" ? Check : status === "failed" ? X : LinkIcon;
+
   return (
-    <button
-      type="button"
-      onClick={copyLink}
-      aria-label={copied ? "Link copied" : "Copy link to this car"}
-      title={copied ? "Link copied" : "Copy link"}
-      className="rounded-md border border-zinc-600 bg-zinc-900 p-2 text-white hover:bg-zinc-800"
-    >
-      {copied ? <Check size={16} /> : <SquareArrowOutUpRight size={16} />}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={shareLink}
+        aria-label={status === "idle" ? "Share link to this car" : SHARE_STATUS_TEXT[status]}
+        title={SHARE_STATUS_TEXT[status]}
+        className={cn(
+          "rounded-md border bg-zinc-900 p-2 hover:bg-zinc-800",
+          status === "copied" && "border-emerald-600 text-emerald-400",
+          status === "failed" && "border-rose-600 text-rose-400",
+          status === "idle" && "border-zinc-600 text-white"
+        )}
+      >
+        <StatusIcon size={16} aria-hidden="true" />
+      </button>
+      <span role="status" className="sr-only">
+        {status === "idle" ? "" : SHARE_STATUS_TEXT[status]}
+      </span>
+    </>
   );
 }
 
@@ -115,7 +154,7 @@ export function CarModal({ card, closeTo }: { card: CardItem; closeTo?: string }
       onClose={close}
       className="max-w-4xl"
       contentClassName={CAR_MODAL_CONTENT_CLASS}
-      actions={<ShareButton token={card.token} />}
+      actions={<ShareButton token={card.token} title={card.CarName} />}
     >
       <CarDetails card={card} />
     </Modal>

@@ -15,7 +15,8 @@ export function CardsGrid({ cards }: CardsGridProps) {
 
   // Keyed on the rows rather than the page number, so a filter change on page 1 also scrolls to the top.
   useEffect(() => {
-    gridRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    gridRef.current?.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
   }, [cards]);
 
   return (

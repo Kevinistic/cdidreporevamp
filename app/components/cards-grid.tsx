@@ -10,14 +10,6 @@ type CardsGridProps = {
   cards: CardItem[];
 };
 
-// Removed wins over rarity; Exclusive over Limited.
-function getCardBackground(card: CardItem) {
-  if (card.Legacy) return "bg-[#230405]";
-  if (card.Limited === "Exclusive") return "bg-[#1c0b2b]";
-  if (card.Limited === "Limited") return "bg-[#221b05]";
-  return "bg-zinc-950";
-}
-
 export function CardsGrid({ cards }: CardsGridProps) {
   const gridRef = useRef<HTMLElement>(null);
 
@@ -43,7 +35,7 @@ export function CardsGrid({ cards }: CardsGridProps) {
             href={`/car/${card.token}`}
             className={cn(
               "flex h-full flex-col justify-between rounded-lg border border-zinc-700 hover:border-zinc-500 p-2 text-white shadow-sm",
-              getCardBackground(card)
+              card.Legacy ? "bg-[#230405]" : "bg-zinc-950"
             )}
           >
             <div>

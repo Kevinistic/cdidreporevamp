@@ -58,6 +58,54 @@ function normalizePriceInput(value: string) {
   return value.replace(/\D/g, "");
 }
 
+// a min above the max would match nothing, so treat it as the same range typed the other way round
+function orderPriceRange(range: PriceRange): PriceRange {
+  return Number(range.min) > Number(range.max) ? { min: range.max, max: range.min } : range;
+}
+
+function PriceInput({
+  label,
+  value,
+  placeholder,
+  onChange,
+  onFocus,
+  onBlur,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+  onFocus: () => void;
+  onBlur: () => void;
+}) {
+  return (
+    <label className="block space-y-2">
+      <span className="block text-zinc-300">{label}</span>
+      <span className="relative block">
+        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-500">
+          Rp.
+        </span>
+        <input
+          type="text"
+          inputMode="numeric"
+          enterKeyHint="done"
+          autoComplete="off"
+          value={value}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          onChange={(event) => onChange(normalizePriceInput(event.target.value))}
+          // the range is applied on blur, so Enter blurs to apply it (and closes the phone keyboard)
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.currentTarget.blur();
+          }}
+          placeholder={placeholder}
+          className="w-full rounded-md border border-zinc-700 bg-zinc-800 py-2 pl-10 pr-3 text-white tabular-nums placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </span>
+    </label>
+  );
+}
+
 export type FilterState = {
   included: string[];
   excluded: string[];
@@ -75,7 +123,6 @@ export type Filters = {
 
 type SidebarFiltersProps = {
   onChange?: (filters: Filters) => void;
-  carCount?: number;
   maxPrice?: number;
   dealershipOptions?: DropdownOption[];
   limitedOptions?: DropdownOption[];
@@ -156,31 +203,23 @@ function PricePanel({
 }) {
   return (
     <div className="space-y-3 p-1 text-sm text-white">
-      <label className="block space-y-2">
-        <span className="block text-zinc-300">Min:</span>
-        <input
-          type="text"
-          value={minPrice}
-          onFocus={onMinFocus}
-          onBlur={onMinBlur}
-          onChange={(event) => onMinChange(normalizePriceInput(event.target.value))}
-          placeholder="Enter minimum"
-          className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </label>
+      <PriceInput
+        label="Min:"
+        value={minPrice}
+        placeholder="Enter minimum"
+        onChange={onMinChange}
+        onFocus={onMinFocus}
+        onBlur={onMinBlur}
+      />
 
-      <label className="block space-y-2">
-        <span className="block text-zinc-300">Max:</span>
-        <input
-          type="text"
-          value={maxPrice}
-          onFocus={onMaxFocus}
-          onBlur={onMaxBlur}
-          onChange={(event) => onMaxChange(normalizePriceInput(event.target.value))}
-          placeholder="Enter maximum"
-          className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </label>
+      <PriceInput
+        label="Max:"
+        value={maxPrice}
+        placeholder="Enter maximum"
+        onChange={onMaxChange}
+        onFocus={onMaxFocus}
+        onBlur={onMaxBlur}
+      />
     </div>
   );
 }
@@ -305,7 +344,6 @@ function getFilterState(states: Record<string, "include" | "exclude" | "neutral"
 
 export function SidebarFilters({
   onChange,
-  carCount = 0,
   maxPrice = 0,
   dealershipOptions = [],
   limitedOptions = [],
@@ -448,11 +486,11 @@ export function SidebarFilters({
           }}
           onMinBlur={() => {
             setPriceFocused((current) => ({ ...current, min: false }));
-            setPriceRange((current) => ({ ...current, min: priceInput.min || "0" }));
+            setPriceRange((current) => orderPriceRange({ ...current, min: priceInput.min || "0" }));
           }}
           onMaxBlur={() => {
             setPriceFocused((current) => ({ ...current, max: false }));
-            setPriceRange((current) => ({ ...current, max: priceInput.max || defaultPriceRange.max }));
+            setPriceRange((current) => orderPriceRange({ ...current, max: priceInput.max || defaultPriceRange.max }));
           }}
         />
       </FilterSection>
@@ -515,18 +553,16 @@ export function SidebarFilters({
 
       {/* Footer ticker */}
       <div className="mt-auto shrink-0 pt-6 text-xs text-zinc-500">
-        <div className="overflow-hidden whitespace-nowrap">
-          {/* pr-6 adds the missing sixth gap, so -50% lands exactly on the start of the second copy */}
-          <div
-            className="flex w-max items-center gap-6 pr-6"
-            style={{ animation: "sidebar-footer-ticker 18s linear infinite" }}
-          >
+        <div className="overflow-hidden whitespace-nowrap motion-reduce:whitespace-normal">
+          {/* pr-6 adds the missing sixth gap, so -50% lands exactly on the start of the second copy.
+              With reduced motion the ticker stops and the lines wrap instead, so none get clipped. */}
+          <div className="flex w-max animate-[sidebar-footer-ticker_18s_linear_infinite] items-center gap-6 pr-6 motion-reduce:w-auto motion-reduce:animate-none motion-reduce:flex-wrap motion-reduce:gap-y-1">
             <span>Made with ❤️ by aoderu</span>
             <span>Built since Aug 2025!</span>
-            <span>{`Showing ${carCount} cars right now!`}</span>
-            <span aria-hidden="true">Made with ❤️ by aoderu</span>
-            <span aria-hidden="true">Built since Aug 2025!</span>
-            <span aria-hidden="true">{`Showing ${carCount} cars right now!`}</span>
+            <span>Tap to include, tap again to exclude!</span>
+            <span aria-hidden="true" className="motion-reduce:hidden">Made with ❤️ by aoderu</span>
+            <span aria-hidden="true" className="motion-reduce:hidden">Built since Aug 2025!</span>
+            <span aria-hidden="true" className="motion-reduce:hidden">Tap to include, tap again to exclude!</span>
           </div>
         </div>
       </div>

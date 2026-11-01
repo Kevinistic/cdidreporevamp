@@ -38,7 +38,10 @@ Run the fetch script again whenever you want fresh data locally. Without `public
 
 ## Project layout
 
-- `app/page.tsx`: server entry; loads car data and renders the client UI
+- `app/layout.tsx`: root layout with the site nav; the page scrolls by default
+- `app/page.tsx`: homepage
+- `app/(browser)/`: the `/car` list and `/car/<token>` pages, in a fixed-height shell that scrolls internally
+- `app/@modal/`: the car modal, shown when a `/car/<token>` link is followed from inside the site
 - `app/components/`: UI components (sidebar filters, grid, pagination, modals)
 - `app/lib/`: data loading, the `useFilteredCars` hook and small helpers
 - `scripts/fetch-cars.js`: build-time data fetch from Supabase

@@ -68,7 +68,7 @@ export function Credits({ onBack }: CreditsProps) {
       <SectionHeading icon={<Lightbulb size={16} className="inline-block" aria-hidden="true" />}>Developer</SectionHeading>
 
       <div className="flex max-w-full flex-col gap-2">
-        <CreditsButton title="aoderu" desc="Design & Development" label="guns.lol" href="https://guns.lol/aoderu" />
+        <CreditsButton title="aoderu" desc="Design & Development" label="portfolio" href="https://kevinistic.github.io/aoderu/" />
       </div>
     </Modal>
   );

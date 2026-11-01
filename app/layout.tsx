@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next"
+import { SiteNav } from "./components/site-nav";
 import "./globals.css";
 
-const title = "CDID Car Database (Unofficial)";
-const description =
-  "Browse every car in Car Driving Indonesia (CDID) on Roblox. Search and filter by price, dealership, gamepass, limited status, and event or removed cars.";
+const title = "CDID Repo (Unofficial)";
+const description = "An unofficial database for Car Driving Indonesia (CDID) on Roblox.";
 
+// No canonical here: child pages inherit it, so each page sets its own.
 export const metadata: Metadata = {
   metadataBase: new URL("https://cdidrepo.vercel.app"),
-  alternates: { canonical: "/" },
   verification: { google: "o-9If2ceDADp2A5IdRoaaJIveYK97SMG3QWfYUq0Ri8" },
-  title,
+  title: { default: title, template: "%s | CDID Repo" },
   description,
-  keywords: ["CDID", "Car Driving Indonesia", "Roblox", "car list", "car prices", "dealership", "gamepass"],
+  keywords: ["CDID", "Car Driving Indonesia", "Roblox"],
   openGraph: {
     title,
     description,
@@ -34,8 +34,9 @@ export default function RootLayout({
   modal: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full overflow-hidden">
-      <body className="flex h-full w-full overflow-hidden">
+    <html lang="en">
+      <body className="flex min-h-dvh w-full flex-col">
+        <SiteNav />
         {children}
         {modal}
         <Analytics />

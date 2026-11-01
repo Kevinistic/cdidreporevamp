@@ -1,10 +1,8 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useRef } from "react";
 import type { CardItem } from "./card";
-import { cn } from "../lib/cn";
+import { CarTile } from "./car-tile";
 
 type CardsGridProps = {
   cards: CardItem[];
@@ -31,30 +29,7 @@ export function CardsGrid({ cards }: CardsGridProps) {
       ) : null}
       <div className="grid gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {cards.map((card) => (
-          <Link
-            key={card._id}
-            href={`/car/${card.token}`}
-            className={cn(
-              "flex h-full flex-col justify-between rounded-lg border border-zinc-700 hover:border-zinc-500 p-2 text-white shadow-sm",
-              card.Legacy ? "bg-[#230405]" : "bg-zinc-950"
-            )}
-          >
-            <div>
-              <p className="text-sm font-bold text-center">{card.CarName}</p>
-              <p className="text-xs text-center">Rp. {card.Price.toLocaleString("de-DE")}</p>
-            </div>
-            {card.CarImageUrl && (
-              <div className="relative mb-1 h-24 w-full">
-                <Image
-                  src={card.CarImageUrl}
-                  alt={card.CarName}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-contain"
-                />
-              </div>
-            )}
-          </Link>
+          <CarTile key={card._id} card={card} />
         ))}
       </div>
     </section>

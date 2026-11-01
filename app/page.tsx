@@ -1,4 +1,4 @@
-import { CarFront, Dices, Map as MapIcon, Package, type LucideIcon } from "lucide-react";
+import { Calculator, CarFront, Map as MapIcon, Package, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -35,31 +35,27 @@ type SectionTileProps = {
   icon: LucideIcon;
   name: string;
   detail: string;
-  size: "large" | "small";
   href?: string;
 };
 
 // A tile without an `href` is a section that hasn't shipped yet.
-function SectionTile({ icon: Icon, name, detail, size, href }: SectionTileProps) {
-  const large = size === "large";
+function SectionTile({ icon: Icon, name, detail, href }: SectionTileProps) {
   const content = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <Icon size={large ? 32 : 20} aria-hidden="true" className={href ? "text-accent" : "text-zinc-500"} />
+        <Icon size={32} aria-hidden="true" className={href ? "text-accent" : "text-zinc-500"} />
         {href ? null : (
           <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400">Soon</span>
         )}
       </div>
       <div>
-        <h2 className={cn("font-bold", large ? "text-2xl" : "text-base")}>{name}</h2>
+        <h2 className="text-2xl font-bold">{name}</h2>
         <p className="text-sm text-zinc-400">{detail}</p>
       </div>
     </>
   );
-  const className = cn(
-    "flex flex-col justify-between gap-4 rounded-lg border bg-zinc-950 p-4",
-    large && "min-h-44 md:min-h-56 md:p-6"
-  );
+  const className =
+    "flex min-h-44 flex-col justify-between gap-4 rounded-lg border bg-zinc-950 p-4 md:min-h-56 md:p-6";
 
   return href ? (
     <Link href={href} className={cn(className, "border-zinc-700 hover:border-accent")}>
@@ -104,10 +100,10 @@ export default async function HomePage() {
       </header>
 
       <section aria-label="Sections" className="grid grid-cols-2 gap-3">
-        <SectionTile icon={CarFront} name="Cars" detail="Search and filter every car" size="large" href="/car" />
-        <SectionTile icon={Package} name="Boxes" detail="Contents and drop rates" size="large" />
-        <SectionTile icon={MapIcon} name="Map" detail="Jobs and places" size="small" />
-        <SectionTile icon={Dices} name="Simulator" detail="Try your luck on boxes" size="small" />
+        <SectionTile icon={CarFront} name="Cars" detail="Search and filter every car" href="/car" />
+        <SectionTile icon={Package} name="Boxes" detail="Contents and drop rates" />
+        <SectionTile icon={MapIcon} name="Map" detail="Jobs and places" />
+        <SectionTile icon={Calculator} name="Tools" detail="Calculate car prices and simulate box opens" />
       </section>
 
       {recentCars.length > 0 ? (
@@ -129,7 +125,7 @@ export default async function HomePage() {
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
         <div className="space-y-1">
           <p className="font-bold">Join the Discord</p>
-          <p className="text-sm text-zinc-400">Hear about new sections as they ship.</p>
+          <p className="text-sm text-zinc-400">Report inaccurate info, suggest features, and hear about updates.</p>
         </div>
         <a
           href="https://discord.gg/QPMguJNTsG"

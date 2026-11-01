@@ -17,6 +17,9 @@ const NAV_LINKS = [
   },
 ];
 
+// Sections that haven't shipped yet.
+const NAV_PLACEHOLDERS = ["Boxes", "Map", "Tools"];
+
 export function SiteNav() {
   const pathname = usePathname();
   const [isCreditsVisible, setIsCreditsVisible] = useState(false);
@@ -44,6 +47,12 @@ export function SiteNav() {
             </Link>
           );
         })}
+
+        {NAV_PLACEHOLDERS.map((label) => (
+          <span key={label} title="Coming soon" className="cursor-not-allowed select-none text-zinc-600">
+            {label}
+          </span>
+        ))}
 
         <div className="ml-auto flex items-center gap-2">
           <a

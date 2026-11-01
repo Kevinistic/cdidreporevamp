@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import HomeClient from "../../components/home-client";
-import { CarModal } from "../../components/maincard";
-import { getCarByToken, getCars } from "../../lib/cars";
+import HomeClient from "../../../components/home-client";
+import { CarModal } from "../../../components/maincard";
+import { getCarByToken, getCars } from "../../../lib/cars";
 
 type CarPageProps = { params: Promise<{ token: string }> };
 
@@ -51,7 +51,7 @@ export default async function CarPage({ params }: CarPageProps) {
   return (
     <>
       <HomeClient cars={cars} />
-      <CarModal card={car} closeTo="/" />
+      <CarModal card={car} closeTo="/car" />
     </>
   );
 }

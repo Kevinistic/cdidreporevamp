@@ -28,6 +28,7 @@ export function Modal({ label, onClose, className, contentClassName, actions, ch
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
+    const openedWithKeyboard = previouslyFocused?.matches(":focus-visible");
     dialogRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -62,6 +63,12 @@ export function Modal({ label, onClose, className, contentClassName, actions, ch
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      // Closing with Escape counts as keyboard use, so the browser would draw a focus ring on an
+      // element that was opened by click. Keyboard users still get the ring.
+      if (previouslyFocused && !openedWithKeyboard) {
+        previouslyFocused.dataset.noFocusRing = "";
+        previouslyFocused.addEventListener("blur", () => delete previouslyFocused.dataset.noFocusRing, { once: true });
+      }
       previouslyFocused?.focus();
     };
   }, []);

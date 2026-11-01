@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --color-accent: #00bf63;
+}
+
 :root {
   color-scheme: dark;
   --nav-h: 2.5rem;

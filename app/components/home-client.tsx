@@ -5,9 +5,8 @@ import { CardsGrid } from "./cards-grid";
 import { useEffect, useState, useMemo } from "react";
 import type { CardItem } from "./card";
 import type { Filters } from "./sidebar-filters";
-import { SlidersHorizontal, ScrollText } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import { Pagination } from "./pagination-bar";
-import { Credits } from "./credits";
 import { cn } from "../lib/cn";
 import { useFilteredCars } from "../lib/use-filtered-cars";
 
@@ -24,7 +23,6 @@ export default function HomeClient({ cars }: HomeClientProps) {
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(false);
   const [filters, setFilters] = useState<Filters | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isCreditsVisible, setIsCreditsVisible] = useState(false);
 
   useEffect(() => {
     // 1. Closed by default on mobile (breakpoint 768px matches Tailwind md)
@@ -136,33 +134,6 @@ export default function HomeClient({ cars }: HomeClientProps) {
           </button>
 
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={setCurrentPage} />
-
-          <div className="flex items-center gap-2">
-            <a
-              href="https://discord.gg/QPMguJNTsG"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Join the Discord server"
-              className="inline-flex aspect-square items-center justify-center rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
-            >
-              <img
-                src="/discord.svg"
-                alt=""
-                width="16"
-                height="16"
-              />
-            </a>
-
-            <button
-              type="button"
-              onClick={() => setIsCreditsVisible(true)}
-              aria-haspopup="dialog"
-              aria-label="Open credits"
-              className="rounded-md border border-zinc-500 px-2 py-2 text-sm text-white hover:bg-zinc-800"
-            >
-              <ScrollText size={16} aria-hidden="true" />
-            </button>
-          </div>
         </header>
 
         <div aria-live="polite" className="shrink-0 px-2 pt-2 text-xs text-zinc-500">
@@ -170,8 +141,6 @@ export default function HomeClient({ cars }: HomeClientProps) {
         </div>
 
         <CardsGrid cards={pagedRows} />
-
-        {isCreditsVisible ? <Credits onBack={() => setIsCreditsVisible(false)} /> : null}
       </main>
     </div>
   );

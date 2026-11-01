@@ -9,6 +9,10 @@
   --nav-h: 2.5rem;
 }
 
+[data-no-focus-ring]:focus-visible {
+  outline: none;
+}
+
 body {
   background: #000000;
   color: #ffffff;

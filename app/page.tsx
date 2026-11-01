@@ -106,7 +106,7 @@ export default async function HomePage() {
       <section aria-label="Sections" className="grid grid-cols-2 gap-3">
         <SectionTile icon={CarFront} name="Cars" detail="Search and filter every car" size="large" href="/car" />
         <SectionTile icon={Package} name="Boxes" detail="Contents and drop rates" size="large" />
-        <SectionTile icon={MapIcon} name="Map" detail="Jobs and gas stations" size="small" />
+        <SectionTile icon={MapIcon} name="Map" detail="Jobs and places" size="small" />
         <SectionTile icon={Dices} name="Simulator" detail="Try your luck on boxes" size="small" />
       </section>
 
@@ -126,21 +126,21 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <a
-        href="https://discord.gg/QPMguJNTsG"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4 hover:border-accent"
-      >
-        <span className="space-y-1">
-          <span className="block font-bold">Join the Discord</span>
-          <span className="block text-sm text-zinc-400">Hear about new sections as they ship.</span>
-        </span>
-        <span className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-bold text-black">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
+        <div className="space-y-1">
+          <p className="font-bold">Join the Discord</p>
+          <p className="text-sm text-zinc-400">Hear about new sections as they ship.</p>
+        </div>
+        <a
+          href="https://discord.gg/QPMguJNTsG"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-bold text-black hover:bg-accent/85"
+        >
           <img src="/discord.svg" alt="" width="16" height="16" className="brightness-0" />
           Join server
-        </span>
-      </a>
+        </a>
+      </div>
     </main>
   );
 }

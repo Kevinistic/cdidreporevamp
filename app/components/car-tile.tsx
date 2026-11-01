@@ -8,7 +8,7 @@ export function CarTile({ card }: { card: CardItem }) {
     <Link
       href={`/car/${card.token}`}
       className={cn(
-        "flex h-full flex-col justify-between rounded-lg border border-zinc-700 hover:border-zinc-500 p-2 text-white shadow-sm",
+        "flex h-full flex-col justify-between rounded-lg border border-zinc-700 hover:border-accent p-2 text-white shadow-sm",
         card.Legacy ? "bg-[#230405]" : "bg-zinc-950"
       )}
     >

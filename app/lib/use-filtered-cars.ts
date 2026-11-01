@@ -50,7 +50,9 @@ function filterAndSortCars(cars: CardItem[], filters: Filters | undefined) {
 
   return cars
     .filter((card) => {
-      if (query && !card.CarName.toLowerCase().includes(query)) return false;
+      // some cars have no engine listed, so fall back to an empty string
+      const searchField = filters.searchMode === "engine" ? card.Engine : card.CarName;
+      if (query && !(searchField ?? "").toLowerCase().includes(query)) return false;
       if (!matchesFilterState(card.Dealership, filters.dealerships)) return false;
       if (!matchesFilterState(card.Limited, filters.limiteds)) return false;
       if (!matchesFilterState(card.Gamepass, filters.gamepasses)) return false;

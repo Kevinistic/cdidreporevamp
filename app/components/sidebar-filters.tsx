@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, ChevronDown } from "lucide-react";
+import { ArrowDown, ArrowUp, Car, ChevronDown, Cog } from "lucide-react";
 
 type DropdownOption = {
   label: string;
@@ -14,6 +14,15 @@ type PriceRange = {
   min: string;
   max: string;
 };
+
+export type SearchMode = "name" | "engine";
+
+const DEFAULT_SEARCH_MODE: SearchMode = "name";
+
+const SEARCH_MODE_OPTIONS: { value: SearchMode; label: string; Icon: typeof Car }[] = [
+  { value: "name", label: "name", Icon: Car },
+  { value: "engine", label: "engine", Icon: Cog },
+];
 
 const DEFAULT_SORT_BY = "price-desc";
 
@@ -113,6 +122,7 @@ export type FilterState = {
 
 export type Filters = {
   search: string;
+  searchMode: SearchMode;
   limiteds: FilterState;
   gamepasses: FilterState;
   dealerships: FilterState;
@@ -354,6 +364,7 @@ export function SidebarFilters({
   const defaultPriceRange = useMemo<PriceRange>(() => ({ min: "0", max: String(maxPrice) }), [maxPrice]);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchMode, setSearchMode] = useState<SearchMode>(DEFAULT_SEARCH_MODE);
   const [typeStates, setTypeStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [limitedStates, setLimitedStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
   const [gamepassStates, setGamepassStates] = useState<Record<string, "include" | "exclude" | "neutral">>({});
@@ -366,6 +377,7 @@ export function SidebarFilters({
   const handleReset = () => {
     setOpenSections(DEFAULT_OPEN_SECTIONS);
     setSearchQuery("");
+    setSearchMode(DEFAULT_SEARCH_MODE);
     setTypeStates({});
     setLimitedStates({});
     setGamepassStates({});
@@ -519,6 +531,7 @@ export function SidebarFilters({
   useEffect(() => {
     onChangeRef.current?.({
       search: searchQuery,
+      searchMode,
       limiteds: getFilterState(limitedStates),
       gamepasses: getFilterState(gamepassStates),
       dealerships: getFilterState(dealershipStates),
@@ -526,7 +539,7 @@ export function SidebarFilters({
       sortBy: sortByValue,
       types: getFilterState(typeStates),
     });
-  }, [searchQuery, limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, typeStates]);
+  }, [searchQuery, searchMode, limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, typeStates]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -534,12 +547,33 @@ export function SidebarFilters({
       <div className="mt-6 flex w-full gap-2">
         <input
           type="text"
-          placeholder="Search..."
-          aria-label="Search cars by name"
+          placeholder={`Search by ${searchMode}...`}
+          aria-label={`Search cars by ${searchMode}`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="min-w-0 flex-1 rounded-md bg-zinc-900 px-4 py-2 text-white focus:bg-zinc-800 focus:outline-none"
         />
+        {/* stacked toggle picks which field the search matches; stretches to the input's height */}
+        <div role="group" aria-label="Search by" className="flex shrink-0 flex-col overflow-hidden rounded-md bg-zinc-900">
+          {SEARCH_MODE_OPTIONS.map(({ value, label, Icon }) => {
+            const active = searchMode === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setSearchMode(value)}
+                aria-pressed={active}
+                aria-label={`Search by ${label}`}
+                title={`Search by ${label}`}
+                className={`flex flex-1 items-center justify-center px-2 transition ${
+                  active ? "bg-zinc-700 text-white" : "text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+                }`}
+              >
+                <Icon aria-hidden="true" className="h-3.5 w-3.5" />
+              </button>
+            );
+          })}
+        </div>
         <button
           type="button"
           onClick={handleReset}

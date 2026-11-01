@@ -110,8 +110,8 @@ export default async function HomePage() {
         <section className="space-y-3">
           <div className="flex items-baseline justify-between gap-4">
             <h2 className="text-xs uppercase tracking-[0.2em] text-zinc-400">Recently added</h2>
-            <Link href="/car" className="text-sm text-accent hover:underline">
-              View all cars
+            <Link href="/car?type=new" className="text-sm text-accent hover:underline">
+              View all new cars
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">

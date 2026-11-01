@@ -2,9 +2,11 @@
 
 import { Check, Link as LinkIcon, X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { CardItem } from "./card";
+import type { BoxLink } from "../lib/boxes";
 import { cn } from "../lib/cn";
 import { Modal } from "./modal";
 
@@ -78,7 +80,7 @@ function ShareButton({ token, title }: { token: string; title: string }) {
   );
 }
 
-export function CarDetails({ card }: { card: CardItem }) {
+export function CarDetails({ card, boxes = [] }: { card: CardItem; boxes?: BoxLink[] }) {
   return (
     <>
       <div className="flex-1 space-y-4">
@@ -107,6 +109,19 @@ export function CarDetails({ card }: { card: CardItem }) {
           <p><span className="text-zinc-500">Limited:</span> {card.Limited ?? "No"}</p>
           <p><span className="text-zinc-500">Gamepass:</span> {card.Gamepass ?? "No"}</p>
           <p><span className="text-zinc-500">Engine:</span> {card.Engine || "N/A"}</p>
+          {boxes.length > 0 ? (
+            <p>
+              <span className="text-zinc-500">Available from:</span>{" "}
+              {boxes.map((box, index) => (
+                <span key={box.slug}>
+                  {index > 0 ? ", " : null}
+                  <Link href={`/box#${box.slug}`} className="text-accent hover:underline">
+                    {box.name}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -131,7 +146,7 @@ export function CarDetails({ card }: { card: CardItem }) {
 
 // Intercepted /car/[token] closes with a history step back to the grid. On a direct load there is
 // no grid entry behind it, so the page passes `closeTo` to go to the car list instead.
-export function CarModal({ card, closeTo }: { card: CardItem; closeTo?: string }) {
+export function CarModal({ card, boxes, closeTo }: { card: CardItem; boxes?: BoxLink[]; closeTo?: string }) {
   const router = useRouter();
   // The modal stays up until the navigation lands, so a double click or held Escape would
   // otherwise step back twice and leave the grid.
@@ -156,7 +171,7 @@ export function CarModal({ card, closeTo }: { card: CardItem; closeTo?: string }
       contentClassName={CAR_MODAL_CONTENT_CLASS}
       actions={<ShareButton token={card.token} title={card.CarName} />}
     >
-      <CarDetails card={card} />
+      <CarDetails card={card} boxes={boxes} />
     </Modal>
   );
 }

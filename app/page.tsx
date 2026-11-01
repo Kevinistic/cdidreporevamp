@@ -101,7 +101,7 @@ export default async function HomePage() {
 
       <section aria-label="Sections" className="grid grid-cols-2 gap-3">
         <SectionTile icon={CarFront} name="Cars" detail="Search and filter every car" href="/car" />
-        <SectionTile icon={Package} name="Boxes" detail="Contents and drop rates" />
+        <SectionTile icon={Package} name="Boxes" detail="Contents and drop rates" href="/box" />
         <SectionTile icon={MapIcon} name="Map" detail="Jobs and places" />
         <SectionTile icon={Calculator} name="Tools" detail="Calculate car prices and simulate box opens" />
       </section>

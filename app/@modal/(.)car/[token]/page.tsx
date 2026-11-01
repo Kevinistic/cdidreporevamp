@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { CarModal } from "../../../components/maincard";
+import { getBoxesForCar } from "../../../lib/boxes";
 import { getCarByToken, getCars } from "../../../lib/cars";
 
 export async function generateStaticParams() {
@@ -11,5 +12,5 @@ export default async function InterceptedCarPage({ params }: { params: Promise<{
   const { token } = await params;
   const car = await getCarByToken(token);
   if (!car) notFound();
-  return <CarModal card={car} />;
+  return <CarModal card={car} boxes={await getBoxesForCar(car._id)} />;
 }

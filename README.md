@@ -6,6 +6,8 @@ A searchable, filterable list of every car in [Car Driving Indonesia](https://ww
 
 Car data lives in Supabase. At build time, `scripts/fetch-cars.js` pulls every row from the configured view and writes it to `public/data/cars.json`. The home page reads that file on the server, so the page is prerendered with real data. Filtering, sorting and pagination then happen in the browser.
 
+Box data works the same way: `scripts/fetch-boxes.js` reads the `boxes`, `box_tiers` and `box_items` tables and writes `public/data/boxes.json`. An item's odds are its tier's rate divided by the number of items in that tier.
+
 Data only updates when the site is rebuilt.
 
 ## Environment variables
@@ -24,15 +26,16 @@ Put these in `.env` (the fetch script also reads `.env` directly when run locall
 ```bash
 npm install
 node scripts/fetch-cars.js
+node scripts/fetch-boxes.js
 npm run dev
 ```
 
-Run the fetch script again whenever you want fresh data locally. Without `public/data/cars.json`, the page renders with no cars.
+Run the fetch scripts again whenever you want fresh data locally. Without the JSON files in `public/data/`, pages render with no cars or boxes.
 
 ## Scripts
 
 - `npm run dev`: start the dev server
-- `npm run build`: fetch car data, then build for production
+- `npm run build`: fetch car and box data, then build for production
 - `npm run start`: serve the production build
 - `npm run lint`: run ESLint
 
@@ -41,7 +44,8 @@ Run the fetch script again whenever you want fresh data locally. Without `public
 - `app/layout.tsx`: root layout with the site nav; the page scrolls by default
 - `app/page.tsx`: homepage
 - `app/(browser)/`: the `/car` list and `/car/<token>` pages, in a fixed-height shell that scrolls internally
+- `app/box/`: the `/box` page, with a tab for each box
 - `app/@modal/`: the car modal, shown when a `/car/<token>` link is followed from inside the site
 - `app/components/`: UI components (sidebar filters, grid, pagination, modals)
 - `app/lib/`: data loading, the `useFilteredCars` hook and small helpers
-- `scripts/fetch-cars.js`: build-time data fetch from Supabase
+- `scripts/fetch-cars.js`, `scripts/fetch-boxes.js`: build-time data fetches from Supabase

@@ -15,10 +15,15 @@ const NAV_LINKS = [
     label: "Cars",
     isActive: (pathname: string) => pathname === "/car" || pathname.startsWith("/car/"),
   },
+  {
+    href: "/box",
+    label: "Boxes",
+    isActive: (pathname: string) => pathname === "/box" || pathname.startsWith("/box/"),
+  },
 ];
 
 // Sections that haven't shipped yet.
-const NAV_PLACEHOLDERS = ["Boxes", "Map", "Tools"];
+const NAV_PLACEHOLDERS = ["Map", "Tools"];
 
 export function SiteNav() {
   const pathname = usePathname();

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import HomeClient from "../../components/home-client";
 import { getCars } from "../../lib/cars";
 
-const title = "CDID Car Database (Unofficial)";
+const title = "The CDID Database (Unofficial)";
 const description =
   "Browse every car in Car Driving Indonesia (CDID) on Roblox. Search and filter by price, dealership, gamepass, limited status, and event or removed cars.";
 

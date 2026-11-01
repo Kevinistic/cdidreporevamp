@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import HomeClient from "../../../components/home-client";
 import { CarModal } from "../../../components/maincard";
+import { getBoxesForCar } from "../../../lib/boxes";
 import { getCarByToken, getCars } from "../../../lib/cars";
 
 type CarPageProps = { params: Promise<{ token: string }> };
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: CarPageProps): Promise<Metada
       title,
       description,
       type: "website",
-      siteName: "CDID Car Database (Unofficial)",
+      siteName: "The CDID Database (Unofficial)",
       images: car.CarImageUrl ? [{ url: car.CarImageUrl, width: 250, height: 250, alt: car.CarName }] : undefined,
     },
     twitter: { card: "summary", title, description, images: car.CarImageUrl ? [car.CarImageUrl] : undefined },
@@ -51,7 +52,7 @@ export default async function CarPage({ params }: CarPageProps) {
   return (
     <>
       <HomeClient cars={cars} />
-      <CarModal card={car} closeTo="/car" />
+      <CarModal card={car} boxes={await getBoxesForCar(car._id)} closeTo="/car" />
     </>
   );
 }

@@ -88,7 +88,7 @@ export default function HomeClient({ cars }: HomeClientProps) {
       <aside
         inert={isSidebarVisible === false}
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-40 h-[70dvh] overflow-hidden border-t border-zinc-700 bg-black/95 p-4 backdrop-blur-md md:top-0 md:h-full md:w-80 md:border-r md:border-t-0",
+          "fixed bottom-0 left-0 right-0 z-40 h-[70dvh] overflow-hidden border-t border-zinc-700 bg-black/95 p-4 backdrop-blur-md md:top-[var(--nav-h)] md:h-[calc(100dvh-var(--nav-h))] md:w-80 md:border-r md:border-t-0",
           isTransitionEnabled && "transition-transform duration-200 motion-reduce:transition-none",
           isSidebarVisible === null && "max-md:translate-y-full",
           isSidebarVisible === false && "translate-y-full md:translate-y-0 md:-translate-x-full"

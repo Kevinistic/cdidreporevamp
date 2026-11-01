@@ -130,7 +130,7 @@ export function CarDetails({ card }: { card: CardItem }) {
 }
 
 // Intercepted /car/[token] closes with a history step back to the grid. On a direct load there is
-// no grid entry behind it, so the page passes `closeTo` to go home instead.
+// no grid entry behind it, so the page passes `closeTo` to go to the car list instead.
 export function CarModal({ card, closeTo }: { card: CardItem; closeTo?: string }) {
   const router = useRouter();
   // The modal stays up until the navigation lands, so a double click or held Escape would

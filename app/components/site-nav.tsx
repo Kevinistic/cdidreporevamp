@@ -41,6 +41,10 @@ export function SiteNav() {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
+              // Already here: following the link would drop the filter params from the URL but keep the filters.
+              onClick={(event) => {
+                if (pathname === href) event.preventDefault();
+              }}
               className={cn("hover:text-white", active ? "text-accent" : "text-zinc-400")}
             >
               {label}

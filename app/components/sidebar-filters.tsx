@@ -26,6 +26,27 @@ const SEARCH_MODE_OPTIONS: { value: SearchMode; label: string; Icon: typeof Car 
 
 const DEFAULT_SORT_BY = "price-desc";
 
+const CAR_LIST_PATH = "/car";
+
+// Waits for a pause in typing: Safari throws if history.replaceState is called too often.
+const URL_WRITE_DELAY_MS = 300;
+
+const FILTER_PARAM_KEYS = [
+  "q",
+  "by",
+  "type",
+  "type_not",
+  "limited",
+  "limited_not",
+  "gamepass",
+  "gamepass_not",
+  "dealership",
+  "dealership_not",
+  "min",
+  "max",
+  "sort",
+];
+
 const DEFAULT_OPEN_SECTIONS: Record<SectionKey, boolean> = {
   type: true,
   limited: false,
@@ -352,6 +373,42 @@ function getFilterState(states: Record<string, "include" | "exclude" | "neutral"
   return { included, excluded };
 }
 
+// options that no longer exist are dropped, so an old link can't filter on something with no button to undo it
+function readOptionStates(params: URLSearchParams, key: string, options: DropdownOption[]) {
+  const states: Record<string, "include" | "exclude" | "neutral"> = {};
+  const isOption = (value: string) => options.some((option) => option.value === value);
+  for (const value of params.getAll(key).filter(isOption)) {
+    states[value] = "include";
+  }
+  for (const value of params.getAll(`${key}_not`).filter(isOption)) {
+    states[value] = "exclude";
+  }
+  return states;
+}
+
+function appendFilterState(params: URLSearchParams, key: string, { included, excluded }: FilterState) {
+  included.forEach((value) => params.append(key, value));
+  excluded.forEach((value) => params.append(`${key}_not`, value));
+}
+
+// Only filters that differ from the default go in the URL, and params that aren't ours are left alone.
+function buildFilterQuery(filters: Filters, defaultMaxPrice: string) {
+  const params = new URLSearchParams(window.location.search);
+  FILTER_PARAM_KEYS.forEach((key) => params.delete(key));
+
+  if (filters.search) params.set("q", filters.search);
+  if (filters.searchMode !== DEFAULT_SEARCH_MODE) params.set("by", filters.searchMode);
+  appendFilterState(params, "type", filters.types);
+  appendFilterState(params, "limited", filters.limiteds);
+  appendFilterState(params, "gamepass", filters.gamepasses);
+  appendFilterState(params, "dealership", filters.dealerships);
+  if (filters.priceRange.min !== "0") params.set("min", filters.priceRange.min);
+  if (filters.priceRange.max !== defaultMaxPrice) params.set("max", filters.priceRange.max);
+  if (filters.sortBy !== DEFAULT_SORT_BY) params.set("sort", filters.sortBy);
+
+  return params.toString();
+}
+
 export function SidebarFilters({
   onChange,
   maxPrice = 0,
@@ -373,6 +430,8 @@ export function SidebarFilters({
   const [priceInput, setPriceInput] = useState<PriceRange>(defaultPriceRange);
   const [priceFocused, setPriceFocused] = useState<{ min: boolean; max: boolean }>({ min: false, max: false });
   const [sortByValue, setSortByValue] = useState<string>(DEFAULT_SORT_BY);
+  // false until the URL has been read, so the defaults from the first render can't overwrite it
+  const [isUrlRead, setIsUrlRead] = useState(false);
 
   const handleReset = () => {
     setOpenSections(DEFAULT_OPEN_SECTIONS);
@@ -528,8 +587,8 @@ export function SidebarFilters({
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  useEffect(() => {
-    onChangeRef.current?.({
+  const filters = useMemo<Filters>(
+    () => ({
       search: searchQuery,
       searchMode,
       limiteds: getFilterState(limitedStates),
@@ -538,8 +597,52 @@ export function SidebarFilters({
       priceRange,
       sortBy: sortByValue,
       types: getFilterState(typeStates),
+    }),
+    [searchQuery, searchMode, limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, typeStates]
+  );
+
+  useEffect(() => {
+    onChangeRef.current?.(filters);
+  }, [filters]);
+
+  // The page is prerendered without the query string, so the full list is the first paint and the
+  // params apply once mounted. useSearchParams would need a Suspense boundary, which leaves
+  // everything inside it out of the static HTML, including the grid crawlers read.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlPrice = orderPriceRange({
+      min: normalizePriceInput(params.get("min") ?? "") || "0",
+      max: normalizePriceInput(params.get("max") ?? "") || defaultPriceRange.max,
     });
-  }, [searchQuery, searchMode, limitedStates, gamepassStates, dealershipStates, priceRange, sortByValue, typeStates]);
+    const urlSort = SORT_OPTIONS.find((option) => option.value === params.get("sort"));
+
+    setSearchQuery(params.get("q") ?? "");
+    setSearchMode(params.get("by") === "engine" ? "engine" : DEFAULT_SEARCH_MODE);
+    setTypeStates(readOptionStates(params, "type", TYPE_OPTIONS));
+    setLimitedStates(readOptionStates(params, "limited", limitedOptions));
+    setGamepassStates(readOptionStates(params, "gamepass", gamepassOptions));
+    setDealershipStates(readOptionStates(params, "dealership", dealershipOptions));
+    setPriceRange(urlPrice);
+    setPriceInput(urlPrice);
+    setSortByValue(urlSort?.value ?? DEFAULT_SORT_BY);
+    setIsUrlRead(true);
+  }, [defaultPriceRange, limitedOptions, gamepassOptions, dealershipOptions]);
+
+  // replaceState rather than router.replace: no server request, and no history entry per keystroke.
+  useEffect(() => {
+    if (!isUrlRead) return;
+
+    const timer = setTimeout(() => {
+      // A car modal open over the grid has its own URL, which shouldn't pick up the filters.
+      if (window.location.pathname !== CAR_LIST_PATH) return;
+
+      const query = buildFilterQuery(filters, defaultPriceRange.max);
+      if (query === window.location.search.slice(1)) return;
+      window.history.replaceState(null, "", query ? `?${query}` : CAR_LIST_PATH);
+    }, URL_WRITE_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [filters, defaultPriceRange, isUrlRead]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">

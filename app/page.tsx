@@ -55,7 +55,7 @@ function SectionTile({ icon: Icon, name, detail, href }: SectionTileProps) {
     </>
   );
   const className =
-    "flex min-h-44 flex-col justify-between gap-4 rounded-lg border bg-zinc-950 p-4 md:min-h-56 md:p-6";
+    "flex min-h-36 flex-col justify-between gap-4 rounded-lg border bg-zinc-950 p-4";
 
   return href ? (
     <Link href={href} className={cn(className, "border-zinc-700 hover:border-accent")}>
@@ -68,7 +68,11 @@ function SectionTile({ icon: Icon, name, detail, href }: SectionTileProps) {
 
 export default async function HomePage() {
   const cars = await getCars();
-  const recentCars = cars.filter((car) => car.New).slice(0, RECENT_CAR_LIMIT);
+  // Same order as /car's default sort, most expensive first.
+  const recentCars = cars
+    .filter((car) => car.New)
+    .sort((a, b) => b.Price - a.Price)
+    .slice(0, RECENT_CAR_LIMIT);
   const dealershipCount = new Set(cars.map((car) => car.Dealership).filter(Boolean)).size;
 
   const stats = [
@@ -93,17 +97,17 @@ export default async function HomePage() {
           {stats.map(({ label, value }) => (
             <div key={label} className="flex flex-col-reverse">
               <dt className="text-xs uppercase tracking-[0.2em] text-zinc-500">{label}</dt>
-              <dd className="text-2xl font-bold text-accent">{value.toLocaleString("de-DE")}</dd>
+              <dd className="text-2xl font-bold text-accent">{value}</dd>
             </div>
           ))}
         </dl>
       </header>
 
-      <section aria-label="Sections" className="grid grid-cols-2 gap-3">
+      <section aria-label="Sections" className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <SectionTile icon={CarFront} name="Cars" detail="Search and filter every car" href="/car" />
         <SectionTile icon={Package} name="Boxes" detail="Contents and drop rates" href="/box" />
         <SectionTile icon={MapIcon} name="Map" detail="Jobs and places" />
-        <SectionTile icon={Calculator} name="Tools" detail="Calculate car prices and simulate box opens" />
+        <SectionTile icon={Calculator} name="Tools" detail="Calculate car prices and simulate box opens" href="/tool" />
       </section>
 
       {recentCars.length > 0 ? (

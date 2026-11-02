@@ -1,28 +1,14 @@
-import { Banknote, CarFront, Ticket } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { BoxTabs } from "../components/box-tabs";
-import { formatBoxPrice, formatOdds, getBoxes, getBoxItemImage, type Box, type BoxItem } from "../lib/boxes";
+import { PageTabs } from "../components/page-tabs";
+import { formatBoxPrice, formatOdds, ITEM_ICONS, TIER_COLORS } from "../lib/box-display";
+import { getBoxes, getBoxItemImage, type Box, type BoxItem } from "../lib/boxes";
 import { cn } from "../lib/cn";
 
 const title = "The CDID Database (Unofficial)";
 const description =
   "Every box in Car Driving Indonesia (CDID) on Roblox, with prices, contents and in-game drop rates.";
-
-// The in-game colour of each tier.
-const TIER_COLORS: Record<string, string> = {
-  Legendary: "#FF7F3F",
-  Epic: "#F94892",
-  Rare: "#277BC0",
-  Common: "#7FB77E",
-};
-
-const ITEM_ICONS = {
-  car: CarFront,
-  cash: Banknote,
-  gamepass: Ticket,
-};
 
 export const metadata: Metadata = {
   alternates: { canonical: "/box" },
@@ -108,12 +94,13 @@ export default async function BoxesPage() {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 lg:py-4">
       {boxes.length > 0 ? (
-        <BoxTabs
+        <PageTabs
           heading={heading}
+          label="Boxes"
           tabs={boxes.map((box) => ({
             slug: box.slug,
             label: box.name.replace(/ Box$/, ""),
-            price: formatBoxPrice(box),
+            aside: formatBoxPrice(box),
             content: <BoxPanel box={box} />,
           }))}
         />

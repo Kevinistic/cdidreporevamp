@@ -45,6 +45,7 @@ Run the fetch scripts again whenever you want fresh data locally. Without the JS
 - `app/page.tsx`: homepage
 - `app/(browser)/`: the `/car` list and `/car/<token>` pages, in a fixed-height shell that scrolls internally
 - `app/box/`: the `/box` page, with a tab for each box
+- `app/tool/`: the `/tool` page, with the price calculator, box simulator, and box odds
 - `app/@modal/`: the car modal, shown when a `/car/<token>` link is followed from inside the site
 - `app/components/`: UI components (sidebar filters, grid, pagination, modals)
 - `app/lib/`: data loading, the `useFilteredCars` hook and small helpers

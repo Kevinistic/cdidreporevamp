@@ -84,14 +84,3 @@ export function getBoxItemImage(item: BoxItem): string | undefined {
   if (item.car?.CarImageUrl) return item.car.CarImageUrl;
   return item.imageId ? `${BOX_IMAGE_BASE_URL}${item.imageId}.png` : undefined;
 }
-
-export function formatBoxPrice({ price, currency }: Pick<Box, "price" | "currency">): string | null {
-  if (price === null) return null;
-  if (currency === "Rp") return `Rp. ${price.toLocaleString("de-DE")}`;
-  return `${price.toLocaleString("de-DE")} ${currency ?? ""}`.trim();
-}
-
-// Rounded to 3 decimals, the same as the game.
-export function formatOdds(rate: number): string {
-  return `${Math.round(rate * 100_000) / 1000}%`;
-}

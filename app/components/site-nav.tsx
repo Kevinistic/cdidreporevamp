@@ -9,21 +9,13 @@ import { Credits } from "./credits";
 import { cn } from "../lib/cn";
 import repoLogo from "../repo.svg";
 
-const NAV_LINKS = [
-  {
-    href: "/car",
-    label: "Cars",
-    isActive: (pathname: string) => pathname === "/car" || pathname.startsWith("/car/"),
-  },
-  {
-    href: "/box",
-    label: "Boxes",
-    isActive: (pathname: string) => pathname === "/box" || pathname.startsWith("/box/"),
-  },
+// An item without an `href` is a section that hasn't shipped yet.
+const NAV_ITEMS: { label: string; href?: string }[] = [
+  { label: "Cars", href: "/car" },
+  { label: "Boxes", href: "/box" },
+  { label: "Map" },
+  { label: "Tools", href: "/tool" },
 ];
-
-// Sections that haven't shipped yet.
-const NAV_PLACEHOLDERS = ["Map", "Tools"];
 
 export function SiteNav() {
   const pathname = usePathname();
@@ -39,8 +31,16 @@ export function SiteNav() {
           <Image src={repoLogo} alt="CDID Repo" width={32} height={32} />
         </Link>
 
-        {NAV_LINKS.map(({ href, label, isActive }) => {
-          const active = isActive(pathname);
+        {NAV_ITEMS.map(({ href, label }) => {
+          if (!href) {
+            return (
+              <span key={label} title="Coming soon" className="cursor-not-allowed select-none text-zinc-600">
+                {label}
+              </span>
+            );
+          }
+
+          const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}
@@ -56,12 +56,6 @@ export function SiteNav() {
             </Link>
           );
         })}
-
-        {NAV_PLACEHOLDERS.map((label) => (
-          <span key={label} title="Coming soon" className="cursor-not-allowed select-none text-zinc-600">
-            {label}
-          </span>
-        ))}
 
         <div className="ml-auto flex items-center gap-2">
           <a

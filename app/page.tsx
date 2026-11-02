@@ -107,7 +107,7 @@ export default async function HomePage() {
         <SectionTile icon={CarFront} name="Cars" detail="Search and filter every car" href="/car" />
         <SectionTile icon={Package} name="Boxes" detail="Contents and drop rates" href="/box" />
         <SectionTile icon={MapIcon} name="Map" detail="Jobs and places" />
-        <SectionTile icon={Calculator} name="Tools" detail="Calculate car prices and simulate box opens" />
+        <SectionTile icon={Calculator} name="Tools" detail="Calculate car prices and simulate box opens" href="/tool" />
       </section>
 
       {recentCars.length > 0 ? (

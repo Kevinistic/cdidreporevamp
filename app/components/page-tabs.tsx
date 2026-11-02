@@ -4,19 +4,25 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "../lib/cn";
 
-type BoxTab = {
+type PageTab = {
   slug: string;
   label: string;
-  price: string | null;
+  aside?: React.ReactNode;
   content: React.ReactNode;
 };
 
-export function BoxTabs({ heading, tabs }: { heading: React.ReactNode; tabs: BoxTab[] }) {
+type PageTabsProps = {
+  heading: React.ReactNode;
+  label: string;
+  tabs: PageTab[];
+};
+
+export function PageTabs({ heading, label: tablistLabel, tabs }: PageTabsProps) {
   const pathname = usePathname();
   const [activeSlug, setActiveSlug] = useState(tabs[0]?.slug);
 
   // Next's client navigation doesn't fire hashchange, so a link from the car modal is picked up
-  // through the pathname. The URL has no box hash while the modal is open, and that leaves the
+  // through the pathname. The URL has no tab hash while the modal is open, and that leaves the
   // current tab alone.
   useEffect(() => {
     const syncFromHash = () => {
@@ -40,7 +46,7 @@ export function BoxTabs({ heading, tabs }: { heading: React.ReactNode; tabs: Box
     const step = event.key === "ArrowRight" ? 1 : -1;
     const next = tabs[(index + step + tabs.length) % tabs.length];
     selectTab(next.slug);
-    document.getElementById(`box-tab-${next.slug}`)?.focus();
+    document.getElementById(`tab-${next.slug}`)?.focus();
   };
 
   return (
@@ -48,19 +54,19 @@ export function BoxTabs({ heading, tabs }: { heading: React.ReactNode; tabs: Box
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 lg:justify-start">
         {heading}
         <p className="text-zinc-200 lg:order-last lg:ml-auto">
-          {tabs.find((tab) => tab.slug === activeSlug)?.price}
+          {tabs.find((tab) => tab.slug === activeSlug)?.aside}
         </p>
-        <div role="tablist" aria-label="Boxes" className="flex w-full gap-2 lg:w-auto">
+        <div role="tablist" aria-label={tablistLabel} className="flex w-full gap-2 lg:w-auto">
           {tabs.map(({ slug, label }, index) => {
             const active = slug === activeSlug;
             return (
               <button
                 key={slug}
-                id={`box-tab-${slug}`}
+                id={`tab-${slug}`}
                 type="button"
                 role="tab"
                 aria-selected={active}
-                aria-controls={`box-panel-${slug}`}
+                aria-controls={`panel-${slug}`}
                 tabIndex={active ? 0 : -1}
                 onClick={() => selectTab(slug)}
                 onKeyDown={(event) => handleKeyDown(event, index)}
@@ -76,13 +82,13 @@ export function BoxTabs({ heading, tabs }: { heading: React.ReactNode; tabs: Box
         </div>
       </div>
 
-      {/* Every panel stays in the HTML so search engines can read all of the boxes. */}
+      {/* Every panel stays in the HTML so search engines can read them, and so a panel keeps its state. */}
       {tabs.map(({ slug, content }) => (
         <div
           key={slug}
-          id={`box-panel-${slug}`}
+          id={`panel-${slug}`}
           role="tabpanel"
-          aria-labelledby={`box-tab-${slug}`}
+          aria-labelledby={`tab-${slug}`}
           hidden={slug !== activeSlug}
         >
           {content}

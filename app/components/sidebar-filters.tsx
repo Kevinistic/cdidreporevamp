@@ -688,21 +688,7 @@ export function SidebarFilters({
 
       <div className="mt-6 flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-zinc-600 border-t border-zinc-700 pt-1">{sections}</div>
 
-      {/* Footer ticker */}
-      <div className="mt-auto shrink-0 pt-6 text-xs text-zinc-500">
-        <div className="overflow-hidden whitespace-nowrap motion-reduce:whitespace-normal">
-          {/* pr-6 adds the missing sixth gap, so -50% lands exactly on the start of the second copy.
-              With reduced motion the ticker stops and the lines wrap instead, so none get clipped. */}
-          <div className="flex w-max animate-[sidebar-footer-ticker_18s_linear_infinite] items-center gap-6 pr-6 motion-reduce:w-auto motion-reduce:animate-none motion-reduce:flex-wrap motion-reduce:gap-y-1">
-            <span>Made with ❤️ by aoderu</span>
-            <span>Built since Aug 2025!</span>
-            <span>Tap to include, tap again to exclude!</span>
-            <span aria-hidden="true" className="motion-reduce:hidden">Made with ❤️ by aoderu</span>
-            <span aria-hidden="true" className="motion-reduce:hidden">Built since Aug 2025!</span>
-            <span aria-hidden="true" className="motion-reduce:hidden">Tap to include, tap again to exclude!</span>
-          </div>
-        </div>
-      </div>
+      <p className="mt-auto shrink-0 pt-6 text-xs text-zinc-500">Tap to include, tap again to exclude!</p>
     </div>
   );
 }

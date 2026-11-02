@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next"
+import { SiteFooter } from "./components/site-footer";
 import { SiteNav } from "./components/site-nav";
 import "./globals.css";
 
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body className="flex min-h-dvh w-full flex-col">
         <SiteNav />
         {children}
+        <SiteFooter />
         {modal}
         <Analytics />
       </body>

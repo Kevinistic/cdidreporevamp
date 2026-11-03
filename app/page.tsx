@@ -13,6 +13,12 @@ const description =
 
 const RECENT_CAR_LIMIT = 6;
 
+// Sociabuzz has no API, so update the raised amount by hand.
+const DONATION_GOAL = 300_000;
+const DONATION_RAISED = 0;
+const donationPercent = Math.min(100, Math.round((DONATION_RAISED / DONATION_GOAL) * 100));
+const formatRupiah = (value: number) => `Rp. ${value.toLocaleString("de-DE")}`;
+
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
   title: { absolute: title },
@@ -147,6 +153,24 @@ export default async function HomePage() {
           <div className="space-y-1">
             <p className="font-bold">Support the project</p>
             <p className="text-sm text-zinc-400">CDIDRepo is free. All money will proceed towards getting a web domain. Only donate when you&apos;re willing and able to!</p>
+            <div className="space-y-1 pt-1">
+              <div className="flex justify-between text-xs text-zinc-400">
+                <span>Money raised</span>
+                <span>
+                  {formatRupiah(DONATION_RAISED)} / {formatRupiah(DONATION_GOAL)}
+                </span>
+              </div>
+              <div
+                role="progressbar"
+                aria-label="Money raised"
+                aria-valuemin={0}
+                aria-valuemax={DONATION_GOAL}
+                aria-valuenow={DONATION_RAISED}
+                className="h-2 overflow-hidden rounded-full bg-zinc-800"
+              >
+                <div className="h-full bg-accent" style={{ width: `${donationPercent}%` }} />
+              </div>
+            </div>
           </div>
           <a
             href="https://sociabuzz.com/cdidrepo/support"

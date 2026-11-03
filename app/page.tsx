@@ -1,4 +1,4 @@
-import { Calculator, CarFront, Map as MapIcon, Package, type LucideIcon } from "lucide-react";
+import { Calculator, CarFront, Heart, Map as MapIcon, Package, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -126,20 +126,38 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
-        <div className="space-y-1">
-          <p className="font-bold">Join the Discord</p>
-          <p className="text-sm text-zinc-400">Report inaccurate info, suggest features, and hear about updates.</p>
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
+          <div className="space-y-1">
+            <p className="font-bold">Join the Discord</p>
+            <p className="text-sm text-zinc-400">Report inaccurate info, suggest features, and hear about updates.</p>
+          </div>
+          <a
+            href="https://discord.gg/QPMguJNTsG"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-bold text-black hover:bg-accent/85"
+          >
+            <img src="/discord.svg" alt="" width="16" height="16" className="brightness-0" />
+            Join server
+          </a>
         </div>
-        <a
-          href="https://discord.gg/QPMguJNTsG"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-bold text-black hover:bg-accent/85"
-        >
-          <img src="/discord.svg" alt="" width="16" height="16" className="brightness-0" />
-          Join server
-        </a>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
+          <div className="space-y-1">
+            <p className="font-bold">Support the project</p>
+            <p className="text-sm text-zinc-400">CDIDRepo is free. All money will proceed towards getting a web domain. Only donate when you&apos;re willing and able to!</p>
+          </div>
+          <a
+            href="https://sociabuzz.com/cdidrepo/support"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-bold text-black hover:bg-accent/85"
+          >
+            <Heart aria-hidden size={16} />
+            Donate
+          </a>
+        </div>
       </div>
     </main>
   );

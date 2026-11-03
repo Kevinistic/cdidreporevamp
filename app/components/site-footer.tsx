@@ -9,6 +9,7 @@ const LINES = [
   "Made with ❤️ by aoderu",
   "Built since Aug 2025!",
   `Last updated ${lastUpdated}`,
+  `Version v${process.env.APP_VERSION}`,
   "Unofficial fan site, not affiliated with Car Driving Indonesia or Roblox.",
 ];
 

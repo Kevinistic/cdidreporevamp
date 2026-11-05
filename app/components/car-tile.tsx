@@ -7,6 +7,8 @@ export function CarTile({ card }: { card: CardItem }) {
   return (
     <Link
       href={`/car/${card.token}`}
+      // Prefetching every visible tile fires hundreds of CDN requests per grid view.
+      prefetch={false}
       className={cn(
         "flex h-full flex-col justify-between rounded-lg border border-zinc-700 hover:border-accent p-2 text-white shadow-sm",
         card.Legacy ? "bg-[#230405]" : "bg-zinc-950"

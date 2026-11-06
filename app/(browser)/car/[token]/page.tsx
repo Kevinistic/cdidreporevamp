@@ -8,7 +8,9 @@ import { getCarByToken, getCars } from "../../../lib/cars";
 type CarPageProps = { params: Promise<{ token: string }> };
 
 // No generateStaticParams: each page embeds the full grid, so they render on demand instead of
-// prerendering one copy of the dataset per car.
+// prerendering one copy of the dataset per car. Cache each rendered page for a day so repeat hits
+// (crawlers, shared links) don't invoke the function; data only changes per build.
+export const revalidate = 86400;
 
 export async function generateMetadata({ params }: CarPageProps): Promise<Metadata> {
   const { token } = await params;

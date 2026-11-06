@@ -81,7 +81,8 @@ export type NextUpdate = {
   headline: string;
   badge: string;
   // Two weeks starting today; positions are percentages across that span.
-  timeline: { from: number; to: number; ticks: { label: string; at: number }[] };
+  // `muted` greys out a window that has already passed; `nowAt` marks today on it.
+  timeline: { from: number; to: number; muted: boolean; nowAt: number | null; ticks: { label: string; at: number }[] };
   fineprint: string;
 };
 
@@ -110,8 +111,10 @@ const shortDay = (instant: number) => formatWib(instant, { weekday: "short", day
 
 const FINE_PRINT = "Unofficial estimate. Dates may shift.";
 
-function buildTimeline(now: number, early: number, late: number): NextUpdate["timeline"] {
-  const start = Math.floor((now + WIB_OFFSET_MS) / DAY_MS) * DAY_MS - WIB_OFFSET_MS;
+function buildTimeline(now: number, early: number, late: number, overdue = false): NextUpdate["timeline"] {
+  // An overdue window is in the past, so the timeline starts at its first day instead of today.
+  const startOf = (instant: number) => Math.floor((instant + WIB_OFFSET_MS) / DAY_MS) * DAY_MS - WIB_OFFSET_MS;
+  const start = startOf(overdue ? early : now);
   const percent = (instant: number) => Math.min(100, Math.max(0, ((instant - start) / (TIMELINE_DAYS * DAY_MS)) * 100));
   const from = percent(early);
   const to = Math.max(percent(late), Math.min(100, from + MIN_WINDOW_PERCENT));
@@ -122,12 +125,12 @@ function buildTimeline(now: number, early: number, late: number): NextUpdate["ti
       ticks.push({ label: formatWib(noon, { weekday: "short", day: "numeric" }), at: percent(noon) });
     }
   }
-  return { from, to, ticks };
+  return { from, to, muted: overdue, nowAt: overdue ? percent(now) : null, ticks };
 }
 
 // Interval model: how long past updates were apart (in days), weighted toward recent ones. The next update
 // lands between the 15th and 85th percentile of those gaps after the last update, so about 70% of the time.
-// Gaps shorter than the time already waited are ruled out. An update already scheduled by a posted restart
+// Gaps shorter than the time already waited are ruled out, and once the usual window has fully passed the card says it is overdue. An update already scheduled by a posted restart
 // notice (a row dated in the future) is shown as-is instead of predicted.
 export function getNextUpdate(now = Date.now()): NextUpdate {
   const instants = UPDATES.map(([date, time]) => wibInstant(date, time));
@@ -149,6 +152,18 @@ export function getNextUpdate(now = Date.now()): NextUpdate {
   const elapsed = (now - last) / DAY_MS;
   const stillPossible = gaps.filter((gap) => gap.value >= elapsed);
   const pool = stillPossible.length >= MIN_GAPS ? stillPossible : gaps;
+
+  // Past the whole usual window with nothing out: say so instead of inventing a new date.
+  const usualEarly = last + weightedQuantile(gaps, LOW_QUANTILE) * DAY_MS;
+  const usualLate = last + weightedQuantile(gaps, HIGH_QUANTILE) * DAY_MS;
+  if (now > usualLate) {
+    return {
+      headline: `Overdue since ${shortDay(usualLate)}`,
+      badge: "No update yet",
+      timeline: buildTimeline(now, usualEarly, usualLate, true),
+      fineprint: FINE_PRINT,
+    };
+  }
 
   const early = Math.max(last + weightedQuantile(pool, LOW_QUANTILE) * DAY_MS, now);
   const late = Math.max(last + weightedQuantile(pool, HIGH_QUANTILE) * DAY_MS, early);

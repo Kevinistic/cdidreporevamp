@@ -152,9 +152,15 @@ export default async function HomePage() {
           <div className="space-y-1" aria-hidden="true">
             <div className="relative h-2 rounded-full bg-zinc-800">
               <div
-                className="absolute inset-y-0 rounded-full bg-accent"
+                className={cn("absolute inset-y-0 rounded-full", nextUpdate.timeline.muted ? "bg-zinc-600" : "bg-accent")}
                 style={{ left: `${nextUpdate.timeline.from}%`, width: `${nextUpdate.timeline.to - nextUpdate.timeline.from}%` }}
               />
+              {nextUpdate.timeline.nowAt === null ? null : (
+                <div
+                  className="absolute -inset-y-1 w-0.5 -translate-x-1/2 rounded-full bg-white"
+                  style={{ left: `${nextUpdate.timeline.nowAt}%` }}
+                />
+              )}
             </div>
             <div className="relative h-4 text-xs text-zinc-500">
               {nextUpdate.timeline.ticks.map(({ label, at }) => (

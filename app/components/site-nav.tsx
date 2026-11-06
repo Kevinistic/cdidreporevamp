@@ -13,8 +13,8 @@ import repoLogo from "../repo.svg";
 const NAV_ITEMS: { label: string; href?: string }[] = [
   { label: "Cars", href: "/car" },
   { label: "Boxes", href: "/box" },
-  { label: "Map" },
   { label: "Tools", href: "/tool" },
+  { label: "Guide" },
 ];
 
 export function SiteNav() {

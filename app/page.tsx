@@ -154,11 +154,16 @@ export default async function HomePage() {
 
         {priceHistogram ? (
           <div className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
-            <div className="space-y-1">
-              <p className="font-bold">Price distribution</p>
-              <p className="text-sm text-zinc-400">
-                Log scale, {cars.length} cars. Median {formatRupiah(medianPrice)}.
-              </p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <p className="font-bold">Price distribution</p>
+                <p className="text-sm text-zinc-400">
+                  Log scale, {cars.length} cars. Median {formatRupiah(medianPrice)}.
+                </p>
+              </div>
+              <Link href="/histogram" className="shrink-0 text-sm text-accent hover:underline">
+                Full histogram
+              </Link>
             </div>
             <PriceHistogram histogram={priceHistogram} total={cars.length} />
           </div>

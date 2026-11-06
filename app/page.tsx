@@ -3,8 +3,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { CarTile } from "./components/car-tile";
+import { PriceHistogram } from "./components/price-histogram";
 import { cn } from "./lib/cn";
 import { getCars } from "./lib/cars";
+import { getPriceHistogram } from "./lib/price-histogram";
 import { getNextUpdate } from "./lib/updates";
 import repoLogo from "./repo.svg";
 
@@ -84,6 +86,9 @@ export default async function HomePage() {
     .sort((a, b) => b.Price - a.Price)
     .slice(0, RECENT_CAR_LIMIT);
   const nextUpdate = getNextUpdate();
+  const prices = cars.map((car) => car.Price);
+  const priceHistogram = getPriceHistogram(prices);
+  const medianPrice = [...prices].sort((a, b) => a - b)[prices.length >> 1] ?? 0;
   const dealershipCount = new Set(cars.map((car) => car.Dealership).filter(Boolean)).size;
 
   const stats = [
@@ -137,7 +142,6 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {/* The right column is left empty for a future feature. */}
       <div className="grid gap-3 md:grid-cols-2">
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
           <div className="space-y-1">
@@ -147,6 +151,18 @@ export default async function HomePage() {
           </div>
           <CalendarClock aria-hidden size={32} className="text-accent" />
         </div>
+
+        {priceHistogram ? (
+          <div className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
+            <div className="space-y-1">
+              <p className="font-bold">Price distribution</p>
+              <p className="text-sm text-zinc-400">
+                Log scale, {cars.length} cars. Median {formatRupiah(medianPrice)}.
+              </p>
+            </div>
+            <PriceHistogram histogram={priceHistogram} total={cars.length} />
+          </div>
+        ) : null}
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">

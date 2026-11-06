@@ -47,7 +47,8 @@ function ItemRow({ item, odds }: { item: BoxItem; odds: string }) {
   const className = "flex items-center gap-3 px-3 py-1.5";
 
   return item.car ? (
-    <Link href={`/car/${item.car.token}`} className={cn(className, "hover:bg-zinc-900 hover:text-accent")}>
+    // No prefetch: every visible item would otherwise fetch its car page in the background (16 requests per /box visit).
+    <Link href={`/car/${item.car.token}`} prefetch={false} className={cn(className, "hover:bg-zinc-900 hover:text-accent")}>
       {content}
     </Link>
   ) : (

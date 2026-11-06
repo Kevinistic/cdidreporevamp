@@ -1,8 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 const { fetchAll, viewName } = require("./lib/supabase");
+const { usePinned } = require("./lib/pinned");
 
 async function run() {
+  if (usePinned("cars.json")) return;
+
   try {
     console.log("Starting build-time cars data fetch...");
     const cars = await fetchAll(viewName, "_id");

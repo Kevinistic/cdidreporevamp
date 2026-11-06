@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { fetchAll } = require("./lib/supabase");
+const { usePinned } = require("./lib/pinned");
 
 const DATA_DIR = path.join(process.cwd(), "public", "data");
 
@@ -36,6 +37,8 @@ function warnAboutProblems(boxes) {
 }
 
 async function run() {
+  if (usePinned("boxes.json")) return;
+
   try {
     console.log("Starting build-time boxes data fetch...");
     const boxRows = await fetchAll("boxes", "id");

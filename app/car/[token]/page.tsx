@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import HomeClient from "../../../components/home-client";
-import { CarModal } from "../../../components/maincard";
-import { getBoxesForCar } from "../../../lib/boxes";
-import { getCarByToken, getCars } from "../../../lib/cars";
+import { CarDetails } from "../../components/maincard";
+import { getBoxesForCar } from "../../lib/boxes";
+import { getCarByToken, getCars } from "../../lib/cars";
 
 type CarPageProps = { params: Promise<{ token: string }> };
 
-// No generateStaticParams: each page embeds the full grid, so they render on demand instead of
-// prerendering one copy of the dataset per car. Cache each rendered page for a day so repeat hits
-// (crawlers, shared links) don't invoke the function; data only changes per build.
-export const revalidate = 86400;
+// Every car page is built at deploy, so visits are plain static files: no function, no ISR reads or writes.
+// That is only affordable because this page holds one car (a few KB), not the whole car list. Don't add the
+// grid back here: at 1.37 MB a page, 2,787 prebuilt pages filled the deployment storage quota.
+// Clicking a tile inside the site opens the modal from app/@modal instead, over the grid.
+export async function generateStaticParams() {
+  const cars = await getCars();
+  return cars.map((car) => ({ token: car.token }));
+}
+
+// Unknown tokens get the static 404 instead of rendering on demand.
+export const dynamicParams = false;
 
 export async function generateMetadata({ params }: CarPageProps): Promise<Metadata> {
   const { token } = await params;
@@ -48,13 +55,24 @@ export async function generateMetadata({ params }: CarPageProps): Promise<Metada
 
 export default async function CarPage({ params }: CarPageProps) {
   const { token } = await params;
-  const [cars, car] = await Promise.all([getCars(), getCarByToken(token)]);
+  const car = await getCarByToken(token);
   if (!car) notFound();
 
   return (
-    <>
-      <HomeClient cars={cars} />
-      <CarModal card={car} boxes={await getBoxesForCar(car._id)} closeTo="/car" />
-    </>
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-4 py-6">
+      <h1 className="sr-only">{car.CarName}</h1>
+      <div>
+        <Link
+          href="/car"
+          prefetch={false}
+          className="inline-block rounded-md border border-zinc-600 bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800"
+        >
+          Browse all cars
+        </Link>
+      </div>
+      <div className="flex flex-col gap-6 rounded-2xl border border-zinc-700 bg-zinc-950 p-6 md:flex-row md:items-center md:justify-between">
+        <CarDetails card={car} boxes={await getBoxesForCar(car._id)} />
+      </div>
+    </main>
   );
 }

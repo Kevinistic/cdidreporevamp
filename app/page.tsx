@@ -1,10 +1,11 @@
-import { Calculator, CarFront, Heart, Map as MapIcon, Package, type LucideIcon } from "lucide-react";
+import { Calculator, CalendarClock, CarFront, Heart, Map as MapIcon, Package, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { CarTile } from "./components/car-tile";
 import { cn } from "./lib/cn";
 import { getCars } from "./lib/cars";
+import { getNextUpdate } from "./lib/updates";
 import repoLogo from "./repo.svg";
 
 const title = "The CDID Database (Unofficial)";
@@ -12,6 +13,9 @@ const description =
   "The unofficial Car Driving Indonesia (CDID) database for Roblox. Browse every car by price, dealership, gamepass and limited status.";
 
 const RECENT_CAR_LIMIT = 6;
+
+// The next-update card is computed from the current time, so refresh the page hourly.
+export const revalidate = 3600;
 
 // Sociabuzz has no API, so update the raised amount by hand.
 const DONATION_GOAL = 300_000;
@@ -79,6 +83,7 @@ export default async function HomePage() {
     .filter((car) => car.New)
     .sort((a, b) => b.Price - a.Price)
     .slice(0, RECENT_CAR_LIMIT);
+  const nextUpdate = getNextUpdate();
   const dealershipCount = new Set(cars.map((car) => car.Dealership).filter(Boolean)).size;
 
   const stats = [
@@ -131,6 +136,18 @@ export default async function HomePage() {
           </div>
         </section>
       ) : null}
+
+      {/* The right column is left empty for a future feature. */}
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
+          <div className="space-y-1">
+            <p className="font-bold">{nextUpdate.title}</p>
+            <p className="font-bold text-accent">{nextUpdate.headline}</p>
+            <p className="text-sm text-zinc-400">{nextUpdate.detail}</p>
+          </div>
+          <CalendarClock aria-hidden size={32} className="text-accent" />
+        </div>
+      </div>
 
       <div className="grid gap-3 md:grid-cols-2">
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">

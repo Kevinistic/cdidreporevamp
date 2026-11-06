@@ -81,7 +81,8 @@ export type NextUpdate = {
   headline: string;
   badge: string;
   // Two weeks starting today; positions are percentages across that span.
-  timeline: { from: number; to: number; ticks: { label: string; at: number }[] };
+  // `muted` greys out a window that has already passed; `nowAt` marks today on it.
+  timeline: { from: number; to: number; muted: boolean; nowAt: number | null; ticks: { label: string; at: number }[] };
   fineprint: string;
 };
 
@@ -91,9 +92,14 @@ const MIN_WINDOW_PERCENT = 2;
 // Later gaps count more: a gap loses half its weight for every HALF_LIFE_GAPS gaps before the latest one.
 const HALF_LIFE_GAPS = 12;
 const MIN_GAPS = 5;
-const LOW_QUANTILE = 0.15;
-const HIGH_QUANTILE = 0.85;
-const CONFIDENCE = Math.round((HIGH_QUANTILE - LOW_QUANTILE) * 100);
+// The middle half of past gaps: wide enough to catch most updates, narrow enough to be a useful range.
+const LOW_QUANTILE = 0.25;
+const HIGH_QUANTILE = 0.75;
+// Only when most past gaps are over does a missing update count as overdue.
+const OVERDUE_QUANTILE = 0.85;
+// The badge reports how often the window would have caught each of the last BACKTEST_SIZE updates.
+const BACKTEST_SIZE = 20;
+const MIN_BACKTESTS = 5;
 
 function weightedQuantile(items: { value: number; weight: number }[], quantile: number) {
   const sorted = [...items].sort((a, b) => a.value - b.value);
@@ -106,12 +112,46 @@ function weightedQuantile(items: { value: number; weight: number }[], quantile: 
   return sorted[sorted.length - 1].value;
 }
 
+function gapsOf(instants: number[]) {
+  return instants.slice(1).map((instant, i) => ({
+    value: (instant - instants[i]) / DAY_MS,
+    weight: 0.5 ** ((instants.length - 2 - i) / HALF_LIFE_GAPS),
+  }));
+}
+
+// The usual window after the last update in `instants`, from the gaps between all of them.
+function usualWindow(instants: number[], high = HIGH_QUANTILE) {
+  const gaps = gapsOf(instants);
+  const last = instants[instants.length - 1];
+  return {
+    early: last + weightedQuantile(gaps, LOW_QUANTILE) * DAY_MS,
+    late: last + weightedQuantile(gaps, high) * DAY_MS,
+  };
+}
+
+const dayOf = (instant: number) => Math.floor((instant + WIB_OFFSET_MS) / DAY_MS);
+
+// Replays history: for each recent update, builds the window from only the updates before it and checks
+// whether the real update landed inside it (by date, ignoring the time of day).
+function backtest(instants: number[]) {
+  let hits = 0;
+  let total = 0;
+  for (let target = Math.max(MIN_GAPS + 1, instants.length - BACKTEST_SIZE); target < instants.length; target++) {
+    const { early, late } = usualWindow(instants.slice(0, target));
+    total++;
+    if (dayOf(instants[target]) >= dayOf(early) && dayOf(instants[target]) <= dayOf(late)) hits++;
+  }
+  return { hits, total };
+}
+
 const shortDay = (instant: number) => formatWib(instant, { weekday: "short", day: "numeric", month: "short" });
 
 const FINE_PRINT = "Unofficial estimate. Dates may shift.";
 
-function buildTimeline(now: number, early: number, late: number): NextUpdate["timeline"] {
-  const start = Math.floor((now + WIB_OFFSET_MS) / DAY_MS) * DAY_MS - WIB_OFFSET_MS;
+function buildTimeline(now: number, early: number, late: number, overdue = false): NextUpdate["timeline"] {
+  // An overdue window is in the past, so the timeline starts at its first day instead of today.
+  const startOf = (instant: number) => Math.floor((instant + WIB_OFFSET_MS) / DAY_MS) * DAY_MS - WIB_OFFSET_MS;
+  const start = startOf(overdue ? early : now);
   const percent = (instant: number) => Math.min(100, Math.max(0, ((instant - start) / (TIMELINE_DAYS * DAY_MS)) * 100));
   const from = percent(early);
   const to = Math.max(percent(late), Math.min(100, from + MIN_WINDOW_PERCENT));
@@ -122,12 +162,13 @@ function buildTimeline(now: number, early: number, late: number): NextUpdate["ti
       ticks.push({ label: formatWib(noon, { weekday: "short", day: "numeric" }), at: percent(noon) });
     }
   }
-  return { from, to, ticks };
+  return { from, to, muted: overdue, nowAt: overdue ? percent(now) : null, ticks };
 }
 
 // Interval model: how long past updates were apart (in days), weighted toward recent ones. The next update
-// lands between the 15th and 85th percentile of those gaps after the last update, so about 70% of the time.
-// Gaps shorter than the time already waited are ruled out. An update already scheduled by a posted restart
+// lands between the 25th and 75th percentile of those gaps after the last update. The badge is the measured
+// hit rate of that window on past updates, not a fixed promise.
+// Gaps shorter than the time already waited are ruled out, and once the usual window has fully passed the card says it is overdue. An update already scheduled by a posted restart
 // notice (a row dated in the future) is shown as-is instead of predicted.
 export function getNextUpdate(now = Date.now()): NextUpdate {
   const instants = UPDATES.map(([date, time]) => wibInstant(date, time));
@@ -142,22 +183,32 @@ export function getNextUpdate(now = Date.now()): NextUpdate {
     };
   }
 
-  const gaps = instants.slice(1).map((instant, i) => ({
-    value: (instant - instants[i]) / DAY_MS,
-    weight: 0.5 ** ((instants.length - 2 - i) / HALF_LIFE_GAPS),
-  }));
+  const gaps = gapsOf(instants);
   const elapsed = (now - last) / DAY_MS;
   const stillPossible = gaps.filter((gap) => gap.value >= elapsed);
   const pool = stillPossible.length >= MIN_GAPS ? stillPossible : gaps;
+
+  // Past the whole usual window with nothing out: say so instead of inventing a new date.
+  const { early: usualEarly } = usualWindow(instants);
+  const { late: overdueAfter } = usualWindow(instants, OVERDUE_QUANTILE);
+  if (now > overdueAfter) {
+    return {
+      headline: `Overdue since ${shortDay(overdueAfter)}`,
+      badge: "No update yet",
+      timeline: buildTimeline(now, usualEarly, overdueAfter, true),
+      fineprint: FINE_PRINT,
+    };
+  }
 
   const early = Math.max(last + weightedQuantile(pool, LOW_QUANTILE) * DAY_MS, now);
   const late = Math.max(last + weightedQuantile(pool, HIGH_QUANTILE) * DAY_MS, early);
   const from = shortDay(early);
   const to = shortDay(late);
+  const { hits, total } = backtest(instants);
 
   return {
     headline: from === to ? from : `${from} – ${to}`,
-    badge: `${CONFIDENCE}% likely`,
+    badge: total >= MIN_BACKTESTS ? `${Math.round((hits / total) * 100)}% hit rate` : "Usual range",
     timeline: buildTimeline(now, early, late),
     fineprint: FINE_PRINT,
   };

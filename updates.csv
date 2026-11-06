@@ -1,0 +1,84 @@
+update_id,date,weekday,time,post_time,time_confidence,era,update_type,version,new_cars,restart_notice_date,restart_notice_time,description,source_row
+u001,2022-02-10,Thu,20:45,20:45,observed,version,version_drop,V0.3,109,,,109 new cars + 2 new jobs,P2
+u002,2022-03-30,Wed,14:18,14:18,observed,version,version_drop,V0.4,66,,,66 new cars + 3 new jobs,P2
+u003,2022-05-01,Sun,02:03,02:03,observed,version,version_drop,V0.5,39,,,39 new cars + few reworked + Ramadhan event,P2
+u004,2022-06-29,Wed,00:02,00:02,observed,version,version_drop,V0.6,114,,,114 new vehicles + few reworked + new province,P2
+u005,2022-08-17,Wed,15:27,15:27,observed,version,version_drop,V0.6.5,2,,,2 new limited cars,P2
+u006,2022-10-03,Mon,00:05,00:05,observed,version,version_drop,V0.7,113,,,113 new vehicles + few reworked,P2
+u007,2022-11-14,Mon,19:42,19:42,observed,version,version_drop,V0.8,92,,,92 new vehicles + few reworked,P2
+u008,2022-12-28,Wed,01:17,01:17,observed,version,version_drop,V0.9,56,,,56 new vehicles + few reworked + Christmas event,P2
+u009,2022-12-31,Sat,19:00,19:00,observed,version,version_drop,V0.9.5,3,,,3 new vehicles + 8 limited cars,P2
+u010,2023-03-11,Sat,15:00,15:00,observed,version,version_drop,V1.0,64,,,64 new and reworked cars (mixed count),P2
+u011,2023-05-01,Mon,12:25,12:25,observed,version,version_drop,V1.1,70,,,70 new and reworked cars (mixed count),P2
+u012,2023-07-09,Sun,17:45,17:45,observed,version,version_drop,V1.2,151,,,151 new and reworked cars (mixed count),P2
+u013,2023-08-17,Thu,15:50,15:50,observed,version,version_drop,V1.2.5,30,,,30 new cars + 3 special cars,P2
+u014,2023-10-31,Tue,22:03,22:03,observed,version,version_drop,V1.3,135,,,135 new and reworked cars (mixed count),P2
+u015,2023-12-26,Tue,12:28,12:28,observed,version,version_drop,V1.4,51,,,51 new and reworked cars (mixed count) + Christmas event,P2
+u016,2024-02-13,Tue,21:41,21:41,observed,version,version_drop,V1.5,81,,,81 new and reworked cars (mixed count) + Chinese New Year,P2
+u017,2024-04-09,Tue,16:20,16:20,observed,version,version_drop,V1.6,86,,,86 new cars + rework + Ramadhan event,P2
+u018,2024-07-12,Fri,20:40,20:40,observed,version,version_drop,V1.7,131,,,131 new cars + rework + BSD map rework,P2
+u019,2024-08-16,Fri,22:30,22:30,observed,version,version_drop,V1.8,103,,,103 new cars + rework + Independence Day event,P2
+u020,2024-10-31,Thu,20:12,20:12,observed,version,version_drop,V1.9,97,,,97 new cars + rework + Palimanan Curse event,P2
+u021,2024-12-28,Sat,20:34,20:34,observed,version,version_drop,V1.9.5,110,,,110 new cars + Santa Lost The Hat event,P2
+u022,2025-01-30,Thu,17:08,17:08,observed,version,version_drop,V1.9.8,28,,,28 new cars + Hidden Temple event,P2
+u023,2025-03-28,Fri,23:05,23:05,observed,version,version_drop,V2.0.0,76,,,76 new cars + Ramadhan event,P2
+u024,2025-07-18,Fri,22:11,22:11,observed,version,version_drop,V2.1.0,75,,,75 new cars + Fishing event + new features,P2
+u025,2025-07-26,Sat,01:03,01:03,observed,weekly,weekly_drop,,2,,,Weekly update: 2023 Cybertruck and 2025 RAW TRX + reworks (Saturday off-pattern),P1#1
+u026,2025-08-01,Fri,19:00,23:17,rule,weekly,weekly_drop,,,,,Weekly drop: new cars incl. Crown Wagon and Evo 9 Wagon MR,P1#2
+u027,2025-08-08,Fri,19:00,22:50,rule,weekly,weekly_drop,,,,,Weekly drop: Atruse quattro and Sierra RS Cosworth,P1#3
+u028,2025-08-15,Fri,19:00,22:52,rule,weekly,weekly_drop,,,,,Weekly drop: Valkon EM90 and Perkasa Bima EV,P1#4
+u029,2025-08-16,Sat,22:23,22:23,observed,version,version_drop,V2.2.0,97,,,97 new cars + reworks + Jawa Timur map,P1#5
+u030,2025-08-18,Mon,12:21,12:21,observed,weekly,map_event,,,,,Independence Day event added,P1#5a
+u031,2025-08-22,Fri,19:00,19:14,rule,weekly,weekly_drop,,,,,Weekly drop: Lahkokgini Alpa cars + limiteds,P1#6
+u032,2025-08-29,Fri,19:00,19:17,rule,weekly,weekly_drop,,,2025-08-29,11:14,Weekly drop: limiteds (Panther FullSpec and others),P1#7
+u033,2025-09-05,Fri,19:00,19:00,rule,weekly,weekly_drop,,3,2025-09-05,17:46,Weekly drop: 3 limiteds (Panther Tuned Everest Tuned Ranger Tuned),P1#8
+u034,2025-09-12,Fri,19:00,19:03,rule,weekly,weekly_drop,,,2025-09-12,05:27,Weekly drop: limiteds (Seal Ute SuperBeetle OEW and others),P1#9
+u035,2025-09-26,Fri,19:00,19:08,rule,weekly,weekly_drop,,,2025-09-26,17:01,New weekly cars available (no car list in post),P1#10
+u036,2025-10-03,Fri,19:00,,rule,weekly,notice_only,,,2025-10-03,03:48,Restart notice only (counted per rule),P3#11
+u037,2025-10-10,Fri,19:00,19:16,rule,weekly,weekly_drop,,3,2025-10-10,05:35,Weekly drop: 3 limiteds (Charger SVX Mark X 350 G's MUX Thai),P1#12
+u038,2025-10-17,Fri,19:00,19:10,rule,weekly,weekly_drop,,,2025-10-17,09:05,Weekly drop: limiteds (GR-S Strobo Vellfire Strobo and others),P1#13
+u039,2025-10-31,Fri,22:08,22:08,observed,version,version_drop,V2.3.0,81,,,81 new cars + 4 exclusive + Halloween event,P1#14
+u040,2025-11-02,Sun,,,unknown,weekly,notice_only,,,2025-11-02,10:59,Restart for upcoming limited car (counted per owner; drop time unknown),P1#15
+u041,2025-11-07,Fri,19:00,19:06,rule,weekly,weekly_drop,,3,,,3 weekly drop cars (Civic RS:HEV Tiny Cooper JCW X-Trail Autech),P1#16
+u042,2025-11-14,Fri,19:00,19:01,rule,weekly,weekly_drop,,3,,,Weekly drop: Tiny Cooper SE Golf GTI Puzyo 206,P1#17
+u043,2025-11-21,Fri,19:00,19:02,rule,weekly,weekly_drop,,3,2025-11-21,18:45,Weekly drop: Octavia VRS Combi G70 Shooting Brake 356 A,P1#18
+u044,2025-11-28,Fri,19:00,19:00,rule,weekly,weekly_drop,,,2025-11-28,15:21,Weekly drop: GR86 and BRZ + reworks + limiteds,P1#19
+u045,2025-12-30,Tue,00:00,00:00,observed,version,version_drop,V2.4.0,60,,,60+ new cars + 1 exclusive + Christmas event,P1#20
+u046,2026-01-02,Fri,22:04,22:04,observed,weekly,map_event,,,,,Seasonal map shutdown: Bandalam expansion,P1#20a
+u047,2026-01-09,Fri,19:00,19:30,rule,weekly,weekly_drop,,,2026-01-08,23:38,2.4 W1: Rinaldi Zoro LMH exclusive and BMR M3 CS Touring and others,P1#21
+u048,2026-01-16,Fri,19:00,19:14,rule,weekly,weekly_drop,,,2026-01-16,00:27,2.4 W2: Mullbach 62 Landaulet and others,P1#22
+u049,2026-01-23,Fri,19:00,20:05,rule,weekly,weekly_drop,,,2026-01-23,10:01,2.4 W3: Avanza SVX and others,P1#23
+u050,2026-01-30,Fri,19:00,22:12,rule,weekly,weekly_drop,,,2026-01-30,15:24,2.4 W4: Corolla Twincam GTi and others,P1#24
+u051,2026-02-18,Wed,21:40,21:40,observed,weekly,map_event,V2.4.0.5,,2026-02-18,21:30,Jakarta lighting + Bandalam to PIK + Chinese New Year event,P1#25
+u052,2026-02-20,Fri,20:51,20:51,observed,version,version_drop,V2.5,62,,,62+ new cars,P1#26
+u053,2026-02-27,Fri,19:00,21:00,rule,weekly,weekly_drop,,,2026-02-26,22:46,Weekly W1 Feb: Haekoo J8 Rally Lahkokgini Revolution TT and others,P1#27
+u054,2026-03-07,Sat,19:01,19:01,observed,weekly,map_event,,,2026-03-06,20:11,CDID x Danur: The Last Chapter live (following weekly-drop restart),P1#28a
+u055,2026-03-13,Fri,19:00,,rule,weekly,notice_only,,,2026-03-13,20:12,Restart notice only (counted per rule),P3#29
+u056,2026-03-20,Fri,20:12,20:12,observed,weekly,map_event,,,,,Danur Chapters 4 and Last Chapter,P1#30
+u057,2026-03-21,Sat,23:07,23:07,observed,weekly,map_event,V2.5.5,,,,Lintas Sumatra map + race system + Ramadhan event + cars,P1#31
+u058,2026-03-27,Fri,19:00,21:18,rule,weekly,weekly_drop,,40,2026-03-27,14:33,Weekly drop: 40+ cars + upcoming reworks,P1#32
+u059,2026-04-03,Fri,19:00,19:03,rule,weekly,weekly_drop,,3,2026-04-03,00:05,Weekly drop: 3 limited drag cars,P1#33
+u060,2026-04-17,Fri,19:00,19:00,rule,weekly,weekly_drop,,,2026-04-16,22:50,Weekly drop: RX-8 family,P1#35
+u061,2026-04-24,Fri,19:00,19:00,rule,weekly,weekly_drop,,,2026-04-24,04:04,Weekly drop: 190E Evo 1 + minigame cars,P1#36
+u062,2026-05-01,Fri,19:00,19:00,rule,weekly,weekly_drop,,,2026-05-01,03:14,Weekly drop: Otnas Tamtam Julmann Ute SVX GT Cup Soluna family,P1#37
+u063,2026-05-15,Fri,19:00,,rule,weekly,notice_only,,,2026-05-15,19:50,Restart notices + compensation codes (counted per rule),P3#38
+u064,2026-05-27,Wed,23:10,23:10,observed,version,version_drop,V2.6,40,,,40 new cars (incl. 12-hour limiteds) + Eid event,P1#39
+u065,2026-06-05,Fri,19:00,19:08,rule,weekly,weekly_drop,,,2026-06-04,23:53,Weekly drop: Arena Evo III Swapped and Fortuner 2.5 Rally and others,P1#40
+u066,2026-06-12,Fri,19:00,19:01,rule,weekly,weekly_drop,,,2026-06-12,11:39,Weekly drop: 350Z NISMO and Patrol 3.5T and others,P1#41
+u067,2026-06-19,Fri,19:00,19:00,rule,weekly,weekly_drop,,,2026-06-19,01:56,Weekly drop: Maestro Noir and Corolla GT Tuned; non-limited at 21:00,P1#42
+u068,2026-06-26,Fri,19:00,19:11,rule,weekly,weekly_drop,,,2026-06-26,04:27,Weekly drop: Walden W46 and Panther Tuned and Manover family + reworks,P1#43
+u069,2026-07-24,Fri,22:43,22:43,observed,version,version_drop,V2.6.5,20,,,20 new cars + Nostalgia map,P1#44
+u070,2026-07-31,Fri,19:00,19:16,rule,weekly,weekly_drop,,3,2026-07-31,10:10,Weekly drop: 3 limiteds (S-Presso Jimny Custom March Bolero Triton Offroad),P1#45
+u071,2026-08-01,Sat,01:40,01:40,observed,weekly,map_event,,,,,Convoy Event on Nostalgic Map + 2x Event Point Boost,P1#45a
+u072,2026-08-07,Fri,19:00,,rule,weekly,notice_only,,,2026-08-07,01:10,Restart notices only (counted per rule),P3#46
+u073,2026-08-17,Mon,21:04,21:04,observed,version,version_drop,V2.7,43,,,43 new non-limited cars + Bandung rework + myBCA,P1#47
+u074,2026-08-21,Fri,19:00,,rule,weekly,notice_only,,,2026-08-21,01:34,Restart notices to prepare weekly drop (counted per rule),P3#48
+u075,2026-08-28,Fri,19:00,,rule,weekly,notice_only,,,2026-08-28,01:20,Restart notice only (counted per rule),P3#49
+u076,2026-09-04,Fri,19:00,,rule,weekly,notice_only,,,2026-09-04,00:23,Restart notice only (counted per rule),P3#50
+u077,2026-09-18,Fri,19:00,19:01,rule,weekly,weekly_drop,,5,2026-09-18,03:44,New cars: Pagagini Huayra and Roadster + Civic FE Track + Agya Rally + Civic FB,P1#52
+u078,2026-09-25,Fri,19:00,,rule,weekly,notice_only,,,2026-09-24,23:07,Restart notice only (counted per rule),P3#53
+u079,2026-10-02,Fri,19:00,,rule,weekly,notice_only,,,2026-10-01,23:38,Restart notice only (counted per rule),P3#54
+u080,2026-10-09,Fri,19:00,,rule,weekly,notice_only,,,2026-10-09,00:29,Restart notice only (counted per rule),P3#55
+u081,2026-10-16,Fri,19:00,,rule,weekly,notice_only,,,2026-10-16,08:32,Restart notice only (counted per rule),P3#56
+u082,2026-11-01,Sun,19:06,19:06,observed,version,version_drop,V2.8,92,,,92 new and reworked cars (mixed count) + Halloween 2026 + new gacha,P1#58
+u083,2026-11-06,Fri,19:00,,rule,weekly,notice_only,,,2026-11-06,00:08,Restart notice; pending at scrape time (counted per rule),P3#59

@@ -1,4 +1,4 @@
-import { BookOpen, Calculator, CalendarClock, CarFront, Heart, Package, type LucideIcon } from "lucide-react";
+import { BookOpen, Calculator, CarFront, Heart, Package, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -143,14 +143,29 @@ export default async function HomePage() {
       ) : null}
 
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
-          <div className="space-y-1">
-            <p className="font-bold">{nextUpdate.title}</p>
-            <p className="font-bold text-accent">{nextUpdate.headline}</p>
-            <p className="text-sm text-zinc-400">{nextUpdate.detail}</p>
+        <section aria-label="Next update" className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xs uppercase tracking-[0.2em] text-zinc-400">Next update</h2>
+            <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400">{nextUpdate.badge}</span>
           </div>
-          <CalendarClock aria-hidden size={32} className="text-accent" />
-        </div>
+          <p className="text-xl font-bold text-accent md:text-2xl">{nextUpdate.headline}</p>
+          <div className="space-y-1" aria-hidden="true">
+            <div className="relative h-2 rounded-full bg-zinc-800">
+              <div
+                className="absolute inset-y-0 rounded-full bg-accent"
+                style={{ left: `${nextUpdate.timeline.from}%`, width: `${nextUpdate.timeline.to - nextUpdate.timeline.from}%` }}
+              />
+            </div>
+            <div className="relative h-4 text-xs text-zinc-500">
+              {nextUpdate.timeline.ticks.map(({ label, at }) => (
+                <span key={label} className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${at}%` }}>
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-zinc-500">{nextUpdate.fineprint}</p>
+        </section>
 
         {priceHistogram ? (
           <div className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">

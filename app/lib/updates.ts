@@ -78,10 +78,15 @@ const formatWib = (instant: number, options: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat("en-GB", { ...options, timeZone: "Asia/Jakarta" }).format(instant);
 
 export type NextUpdate = {
-  title: string;
   headline: string;
-  detail: string;
+  badge: string;
+  // Two weeks starting today; positions are percentages across that span.
+  timeline: { from: number; to: number; ticks: { label: string; at: number }[] };
+  fineprint: string;
 };
+
+const TIMELINE_DAYS = 14;
+const MIN_WINDOW_PERCENT = 2;
 
 // Later gaps count more: a gap loses half its weight for every HALF_LIFE_GAPS gaps before the latest one.
 const HALF_LIFE_GAPS = 12;
@@ -103,6 +108,23 @@ function weightedQuantile(items: { value: number; weight: number }[], quantile: 
 
 const shortDay = (instant: number) => formatWib(instant, { weekday: "short", day: "numeric", month: "short" });
 
+const FINE_PRINT = "Unofficial estimate. Dates may shift.";
+
+function buildTimeline(now: number, early: number, late: number): NextUpdate["timeline"] {
+  const start = Math.floor((now + WIB_OFFSET_MS) / DAY_MS) * DAY_MS - WIB_OFFSET_MS;
+  const percent = (instant: number) => Math.min(100, Math.max(0, ((instant - start) / (TIMELINE_DAYS * DAY_MS)) * 100));
+  const from = percent(early);
+  const to = Math.max(percent(late), Math.min(100, from + MIN_WINDOW_PERCENT));
+  const ticks: { label: string; at: number }[] = [];
+  for (let day = 0; day < TIMELINE_DAYS; day++) {
+    const noon = start + day * DAY_MS + 12 * HOUR_MS;
+    if (formatWib(noon, { weekday: "short" }) === "Fri") {
+      ticks.push({ label: formatWib(noon, { weekday: "short", day: "numeric" }), at: percent(noon) });
+    }
+  }
+  return { from, to, ticks };
+}
+
 // Interval model: how long past updates were apart (in days), weighted toward recent ones. The next update
 // lands between the 15th and 85th percentile of those gaps after the last update, so about 70% of the time.
 // Gaps shorter than the time already waited are ruled out. An update already scheduled by a posted restart
@@ -113,9 +135,10 @@ export function getNextUpdate(now = Date.now()): NextUpdate {
 
   if (last > now) {
     return {
-      title: "Next update",
       headline: `${shortDay(last)}, ${formatWib(last, { hour: "2-digit", minute: "2-digit", hour12: false })} WIB`,
-      detail: "A restart notice is up, so the update is on the way.",
+      badge: "Server restarted",
+      timeline: buildTimeline(now, last, last),
+      fineprint: FINE_PRINT,
     };
   }
 
@@ -133,8 +156,9 @@ export function getNextUpdate(now = Date.now()): NextUpdate {
   const to = shortDay(late);
 
   return {
-    title: "Next update (predicted)",
-    headline: from === to ? `Likely ${from}` : `Likely ${from} – ${to}`,
-    detail: `${CONFIDENCE}% confidence, from ${gaps.length} past gaps. A restart notice is the real confirmation.`,
+    headline: from === to ? from : `${from} – ${to}`,
+    badge: `${CONFIDENCE}% likely`,
+    timeline: buildTimeline(now, early, late),
+    fineprint: FINE_PRINT,
   };
 }

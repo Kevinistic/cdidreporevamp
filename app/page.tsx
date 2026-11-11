@@ -160,8 +160,8 @@ export default async function HomePage() {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
-          <div className="space-y-1">
+        <div className="flex flex-col items-start justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
+          <div className="w-full space-y-1">
             <p className="font-bold">Join the Discord</p>
             <p className="text-sm text-zinc-400">Report inaccurate info, suggest features, and hear about updates.</p>
           </div>
@@ -176,8 +176,8 @@ export default async function HomePage() {
           </a>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
-          <div className="space-y-1">
+        <div className="flex flex-col items-start justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
+          <div className="w-full space-y-1">
             <p className="font-bold">Support the project</p>
             <p className="text-sm text-zinc-400">CDIDRepo is free. All money will proceed towards getting a web domain. Only donate when you&apos;re willing and able to!</p>
             <div className="space-y-1 pt-1">

@@ -1,10 +1,10 @@
 {
   "name": "cdidreporevamp",
-  "version": "0.8.3",
+  "version": "0.8.5",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/fetch-cars.js && node scripts/fetch-boxes.js && next build",
+    "build": "node scripts/fetch-cars.js && node scripts/fetch-boxes.js && node scripts/fetch-updates.js && next build",
     "start": "next start",
     "lint": "eslint"
   },

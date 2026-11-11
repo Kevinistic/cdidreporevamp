@@ -144,9 +144,9 @@ export function CarDetails({ card, boxes = [] }: { card: CardItem; boxes?: BoxLi
   );
 }
 
-// Intercepted /car/[token] closes with a history step back to the grid. On a direct load there is
-// no grid entry behind it, so the page passes `closeTo` to go to the car list instead.
-export function CarModal({ card, boxes, closeTo }: { card: CardItem; boxes?: BoxLink[]; closeTo?: string }) {
+// Only shown by the intercepted /car/[token] route, so closing is always a history step back to the grid.
+// A direct load of that URL renders the standalone page in app/car/[token] instead.
+export function CarModal({ card, boxes }: { card: CardItem; boxes?: BoxLink[] }) {
   const router = useRouter();
   // The modal stays up until the navigation lands, so a double click or held Escape would
   // otherwise step back twice and leave the grid.
@@ -159,8 +159,7 @@ export function CarModal({ card, boxes, closeTo }: { card: CardItem; boxes?: Box
   const close = () => {
     if (closingRef.current) return;
     closingRef.current = true;
-    if (closeTo) router.replace(closeTo);
-    else router.back();
+    router.back();
   };
 
   return (

@@ -5,3 +5,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 You are restricted to working in a purely file-editing mode. Do not attempt to run, build, or test this application. Under no circumstances should you run 'npm run dev' or any other local server commands. Your only job is to write, review, and edit the code files.
 <!-- END:nextjs-agent-rules -->
+
+## Free-plan limits
+
+Vercel Hobby + Supabase free tier. Keep requests, storage and function usage low: per-item static params only for small pages (the `/car/[token]` pages are prebuilt because each holds one car; never embed the full car list in a per-item page), `prefetch={false}` on list links, no runtime DB queries (data is fetched at build time), no large assets in the repo. Flag anything that could raise usage before doing it.

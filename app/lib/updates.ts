@@ -1,71 +1,18 @@
-// Confirmed update dates (WIB, UTC+7), copied from updates.csv. Weekly drops go live Friday 19:00 WIB;
-// other rows are the announcement time. Add a line whenever a new update ships.
-// An empty time means it is unknown and is treated as 19:00 WIB.
-export const UPDATES: ReadonlyArray<readonly [date: string, time: string]> = [
-  ["2025-08-01", "19:00"],
-  ["2025-08-08", "19:00"],
-  ["2025-08-15", "19:00"],
-  ["2025-08-16", "22:23"],
-  ["2025-08-18", "12:21"],
-  ["2025-08-22", "19:00"],
-  ["2025-08-29", "19:00"],
-  ["2025-09-05", "19:00"],
-  ["2025-09-12", "19:00"],
-  ["2025-09-26", "19:00"],
-  ["2025-10-03", "19:00"],
-  ["2025-10-10", "19:00"],
-  ["2025-10-17", "19:00"],
-  ["2025-10-31", "22:08"],
-  ["2025-11-02", ""],
-  ["2025-11-07", "19:00"],
-  ["2025-11-14", "19:00"],
-  ["2025-11-21", "19:00"],
-  ["2025-11-28", "19:00"],
-  ["2025-12-30", "00:00"],
-  ["2026-01-02", "22:04"],
-  ["2026-01-09", "19:00"],
-  ["2026-01-16", "19:00"],
-  ["2026-01-23", "19:00"],
-  ["2026-01-30", "19:00"],
-  ["2026-02-18", "21:40"],
-  ["2026-02-20", "20:51"],
-  ["2026-02-27", "19:00"],
-  ["2026-03-07", "19:01"],
-  ["2026-03-13", "19:00"],
-  ["2026-03-20", "20:12"],
-  ["2026-03-21", "23:07"],
-  ["2026-03-27", "19:00"],
-  ["2026-04-03", "19:00"],
-  ["2026-04-17", "19:00"],
-  ["2026-04-24", "19:00"],
-  ["2026-05-01", "19:00"],
-  ["2026-05-15", "19:00"],
-  ["2026-05-27", "23:10"],
-  ["2026-06-05", "19:00"],
-  ["2026-06-12", "19:00"],
-  ["2026-06-19", "19:00"],
-  ["2026-06-26", "19:00"],
-  ["2026-07-24", "22:43"],
-  ["2026-07-31", "19:00"],
-  ["2026-08-01", "01:40"],
-  ["2026-08-07", "19:00"],
-  ["2026-08-17", "21:04"],
-  ["2026-08-21", "19:00"],
-  ["2026-08-28", "19:00"],
-  ["2026-09-04", "19:00"],
-  ["2026-09-18", "19:00"],
-  ["2026-09-25", "19:00"],
-  ["2026-10-02", "19:00"],
-  ["2026-10-09", "19:00"],
-  ["2026-10-16", "19:00"],
-  ["2026-11-01", "19:06"],
-  ["2026-11-06", "19:00"],
-];
+// Update dates and times (WIB, UTC+7) from the Supabase `updates` table, fetched before each build and
+// inlined by next.config.ts. Weekly drops and restart-notice-only Fridays go live Friday 19:00 WIB; other
+// rows are the announcement time. Insert a row in Supabase (time defaults to 19:00) whenever a new update
+// ships, then redeploy.
+export const UPDATES: ReadonlyArray<readonly [date: string, time: string]> = JSON.parse(
+  process.env.UPDATE_ROWS ?? "[]",
+);
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;
 const WIB_OFFSET_MS = 7 * HOUR_MS;
 const WEEKLY_HOUR = 19;
+
+// Updates before this date came every month or two. Only the weekly era after it is used for predictions.
+const WEEKLY_ERA_START = "2025-07-26";
 
 // Turns a WIB wall-clock date and time into a real instant.
 function wibInstant(date: string, time: string) {
@@ -77,139 +24,123 @@ function wibInstant(date: string, time: string) {
 const formatWib = (instant: number, options: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat("en-GB", { ...options, timeZone: "Asia/Jakarta" }).format(instant);
 
+// Whole WIB calendar days since 1970-01-01, which was a Thursday.
+const dayOf = (instant: number) => Math.floor((instant + WIB_OFFSET_MS) / DAY_MS);
+const noonOf = (day: number) => day * DAY_MS - WIB_OFFSET_MS + 12 * HOUR_MS;
+const FRIDAY = 4; // Monday = 0
+const weekdayOf = (day: number) => (day + 3) % 7;
+// The first Friday strictly after `day`: the weekly slot an update is aiming for.
+const nextFriday = (day: number) => day + ((FRIDAY - weekdayOf(day) + 7) % 7 || 7);
+
 export type NextUpdate = {
   headline: string;
   badge: string;
   // Two weeks starting today; positions are percentages across that span.
   // `muted` greys out a window that has already passed; `nowAt` marks today on it.
   timeline: { from: number; to: number; muted: boolean; nowAt: number | null; ticks: { label: string; at: number }[] };
+  // How the estimate is calculated, shown behind a toggle. Only on predicted cards.
+  method?: string;
   fineprint: string;
 };
 
+export const FINE_PRINT = "Unofficial estimate. Dates may shift.";
+
 const TIMELINE_DAYS = 14;
 const MIN_WINDOW_PERCENT = 2;
+// The headline window is the shortest run of days holding at least this share of the possible outcomes.
+const TARGET_LIKELIHOOD = 0.8;
 
-// Later gaps count more: a gap loses half its weight for every HALF_LIFE_GAPS gaps before the latest one.
-const HALF_LIFE_GAPS = 12;
-const MIN_GAPS = 5;
-// The middle half of past gaps: wide enough to catch most updates, narrow enough to be a useful range.
-const LOW_QUANTILE = 0.25;
-const HIGH_QUANTILE = 0.75;
-// Only when most past gaps are over does a missing update count as overdue.
-const OVERDUE_QUANTILE = 0.85;
-// The badge reports how often the window would have caught each of the last BACKTEST_SIZE updates.
-const BACKTEST_SIZE = 20;
-const MIN_BACKTESTS = 5;
+// With fewer past waits this long than this, there is too little history to estimate from.
+const MIN_SAMPLES = 5;
 
-function weightedQuantile(items: { value: number; weight: number }[], quantile: number) {
-  const sorted = [...items].sort((a, b) => a.value - b.value);
-  const total = sorted.reduce((sum, item) => sum + item.weight, 0);
-  let running = 0;
-  for (const item of sorted) {
-    running += item.weight;
-    if (running / total >= quantile) return item.value;
-  }
-  return sorted[sorted.length - 1].value;
-}
+const shortDay = (day: number) => formatWib(noonOf(day), { weekday: "short", day: "numeric", month: "short" });
+const percentText = (likelihood: number) => `${Math.round(likelihood * 100)}%`;
 
-function gapsOf(instants: number[]) {
-  return instants.slice(1).map((instant, i) => ({
-    value: (instant - instants[i]) / DAY_MS,
-    weight: 0.5 ** ((instants.length - 2 - i) / HALF_LIFE_GAPS),
-  }));
-}
-
-// The usual window after the last update in `instants`, from the gaps between all of them.
-function usualWindow(instants: number[], high = HIGH_QUANTILE) {
-  const gaps = gapsOf(instants);
-  const last = instants[instants.length - 1];
-  return {
-    early: last + weightedQuantile(gaps, LOW_QUANTILE) * DAY_MS,
-    late: last + weightedQuantile(gaps, high) * DAY_MS,
-  };
-}
-
-const dayOf = (instant: number) => Math.floor((instant + WIB_OFFSET_MS) / DAY_MS);
-
-// Replays history: for each recent update, builds the window from only the updates before it and checks
-// whether the real update landed inside it (by date, ignoring the time of day).
-function backtest(instants: number[]) {
-  let hits = 0;
-  let total = 0;
-  for (let target = Math.max(MIN_GAPS + 1, instants.length - BACKTEST_SIZE); target < instants.length; target++) {
-    const { early, late } = usualWindow(instants.slice(0, target));
-    total++;
-    if (dayOf(instants[target]) >= dayOf(early) && dayOf(instants[target]) <= dayOf(late)) hits++;
-  }
-  return { hits, total };
-}
-
-const shortDay = (instant: number) => formatWib(instant, { weekday: "short", day: "numeric", month: "short" });
-
-const FINE_PRINT = "Unofficial estimate. Dates may shift.";
-
-function buildTimeline(now: number, early: number, late: number, overdue = false): NextUpdate["timeline"] {
-  // An overdue window is in the past, so the timeline starts at its first day instead of today.
-  const startOf = (instant: number) => Math.floor((instant + WIB_OFFSET_MS) / DAY_MS) * DAY_MS - WIB_OFFSET_MS;
-  const start = startOf(overdue ? early : now);
-  const percent = (instant: number) => Math.min(100, Math.max(0, ((instant - start) / (TIMELINE_DAYS * DAY_MS)) * 100));
-  const from = percent(early);
-  const to = Math.max(percent(late), Math.min(100, from + MIN_WINDOW_PERCENT));
+function buildTimeline(
+  start: number,
+  window: { from: number; to: number },
+  options: { muted?: boolean; today?: number; firstTick?: number; cumulative?: (day: number) => number } = {},
+): NextUpdate["timeline"] {
+  const percent = (day: number) => Math.min(100, Math.max(0, ((day - start) / TIMELINE_DAYS) * 100));
+  const from = percent(window.from);
+  const to = Math.max(percent(window.to + 1), Math.min(100, from + MIN_WINDOW_PERCENT));
   const ticks: { label: string; at: number }[] = [];
-  for (let day = 0; day < TIMELINE_DAYS; day++) {
-    const noon = start + day * DAY_MS + 12 * HOUR_MS;
-    if (formatWib(noon, { weekday: "short" }) === "Fri") {
-      ticks.push({ label: formatWib(noon, { weekday: "short", day: "numeric" }), at: percent(noon) });
+  for (let day = Math.max(start, options.firstTick ?? start); day < start + TIMELINE_DAYS; day++) {
+    if (weekdayOf(day) !== FRIDAY) continue;
+    const label = formatWib(noonOf(day), { weekday: "short", day: "numeric" });
+    // Each Friday shows the chance an update is out by the end of that day.
+    ticks.push({
+      label: options.cumulative ? `${label} · ${percentText(options.cumulative(day))}` : label,
+      at: percent(day + 0.5),
+    });
+  }
+  const muted = options.muted ?? false;
+  return { from, to, muted, nowAt: muted && options.today !== undefined ? percent(options.today + 0.5) : null, ticks };
+}
+
+// Friday-slot model. Each past update in the weekly era is measured from the first Friday after the update
+// before it: 0 means it landed on that Friday, 7 a week late, -6 a hotfix the next day. Offsets that today
+// has already passed are ruled out, and the rest are simple counts, so "79%" means 79% of the past waits
+// that lasted at least this long ended inside the window. Restart-notice-only Fridays count as updates.
+// An update already scheduled by a posted restart notice (a row dated in the future) is shown as-is.
+export function getNextUpdate(now = Date.now()): NextUpdate {
+  const rows = UPDATES.filter(([date]) => date >= WEEKLY_ERA_START);
+  const lastRow = rows[rows.length - 1];
+  const last = wibInstant(lastRow[0], lastRow[1]);
+  const today = dayOf(now);
+
+  // A confirmed update (its row is already in the CSV) stays on the card for the rest of its WIB day,
+  // even after its time has passed, before the prediction moves on to the one after it.
+  if (dayOf(last) >= today) {
+    const day = dayOf(last);
+    return {
+      headline: `${shortDay(day)}, ${formatWib(last, { hour: "2-digit", minute: "2-digit", hour12: false })} WIB`,
+      badge: "100% likely",
+      timeline: buildTimeline(today, { from: day, to: day }),
+      fineprint: FINE_PRINT,
+    };
+  }
+
+  const days = rows.map(([date, time]) => dayOf(wibInstant(date, time)));
+  const offsets = days.slice(1).map((day, i) => day - nextFriday(days[i]));
+  const anchor = nextFriday(days[days.length - 1]);
+  const pool = offsets.filter((offset) => offset >= today - anchor);
+  const share = (test: (day: number) => boolean) => pool.filter((offset) => test(anchor + offset)).length / pool.length;
+
+  if (pool.length < MIN_SAMPLES) {
+    return {
+      headline: "Later than usual",
+      badge: "No update yet",
+      timeline: buildTimeline(Math.max(anchor, today - TIMELINE_DAYS + 1), { from: anchor, to: today }, { muted: true, today }),
+      fineprint: FINE_PRINT,
+    };
+  }
+
+  // The shortest window reaching the target always starts and ends on a day some past update landed on,
+  // so only those days are tried. Ties go to the likelier window, then the earlier one.
+  const landingDays = [...new Set(pool.map((offset) => anchor + offset))].sort((a, b) => a - b);
+  let window = { from: landingDays[0], to: landingDays[landingDays.length - 1], likelihood: 1 };
+  for (const [i, from] of landingDays.entries()) {
+    for (const to of landingDays.slice(i)) {
+      if (to - from > window.to - window.from) break;
+      const likelihood = share((day) => day >= from && day <= to);
+      if (likelihood < TARGET_LIKELIHOOD) continue;
+      const shorter = to - from < window.to - window.from;
+      if (shorter || likelihood > window.likelihood) window = { from, to, likelihood };
+      break;
     }
   }
-  return { from, to, muted: overdue, nowAt: overdue ? percent(now) : null, ticks };
-}
-
-// Interval model: how long past updates were apart (in days), weighted toward recent ones. The next update
-// lands between the 25th and 75th percentile of those gaps after the last update. The badge is the measured
-// hit rate of that window on past updates, not a fixed promise.
-// Gaps shorter than the time already waited are ruled out, and once the usual window has fully passed the card says it is overdue. An update already scheduled by a posted restart
-// notice (a row dated in the future) is shown as-is instead of predicted.
-export function getNextUpdate(now = Date.now()): NextUpdate {
-  const instants = UPDATES.map(([date, time]) => wibInstant(date, time));
-  const last = instants[instants.length - 1];
-
-  if (last > now) {
-    return {
-      headline: `${shortDay(last)}, ${formatWib(last, { hour: "2-digit", minute: "2-digit", hour12: false })} WIB`,
-      badge: "Server restarted",
-      timeline: buildTimeline(now, last, last),
-      fineprint: FINE_PRINT,
-    };
-  }
-
-  const gaps = gapsOf(instants);
-  const elapsed = (now - last) / DAY_MS;
-  const stillPossible = gaps.filter((gap) => gap.value >= elapsed);
-  const pool = stillPossible.length >= MIN_GAPS ? stillPossible : gaps;
-
-  // Past the whole usual window with nothing out: say so instead of inventing a new date.
-  const { early: usualEarly } = usualWindow(instants);
-  const { late: overdueAfter } = usualWindow(instants, OVERDUE_QUANTILE);
-  if (now > overdueAfter) {
-    return {
-      headline: `Overdue since ${shortDay(overdueAfter)}`,
-      badge: "No update yet",
-      timeline: buildTimeline(now, usualEarly, overdueAfter, true),
-      fineprint: FINE_PRINT,
-    };
-  }
-
-  const early = Math.max(last + weightedQuantile(pool, LOW_QUANTILE) * DAY_MS, now);
-  const late = Math.max(last + weightedQuantile(pool, HIGH_QUANTILE) * DAY_MS, early);
-  const from = shortDay(early);
-  const to = shortDay(late);
-  const { hits, total } = backtest(instants);
 
   return {
-    headline: from === to ? from : `${from} – ${to}`,
-    badge: total >= MIN_BACKTESTS ? `${Math.round((hits / total) * 100)}% hit rate` : "Usual range",
-    timeline: buildTimeline(now, early, late),
+    headline: window.from === window.to ? shortDay(window.from) : `${shortDay(window.from)} – ${shortDay(window.to)}`,
+    badge: `${percentText(window.likelihood)} likely`,
+    // Ticks start at the Friday being aimed for, so the last update's own Friday never shows as 0%.
+    timeline: buildTimeline(today, window, {
+      firstTick: anchor,
+      cumulative: (day) => share((updateDay) => updateDay <= day),
+    }),
+    // Built from the target above, so it stays true if that changes.
+    method: `Empirical survival analysis, ${percentText(TARGET_LIKELIHOOD)} HDI. (Thanks Statprob)`,
     fineprint: FINE_PRINT,
   };
 }

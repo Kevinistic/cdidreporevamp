@@ -1,7 +1,61 @@
 # CDID car update history
 
-Source: Discord `#update-changelogs` (CDID Official Server), read in full from the first message (1 Feb 2022) to 6 Nov 2026.
+The update history behind the home page's **Next update** card. The live data is in **Supabase**; this file
+is the reference for what counts as an update and the original research the table was built from.
+
+## Where the data lives
+
+Supabase table `public.updates`. One row per counted update, nothing else:
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `bigint` identity | Filled in by Supabase |
+| `date` | `date` | WIB calendar date |
+| `time` | `time`, default `19:00` | WIB wall-clock time |
+
+`unique (date, time)` blocks duplicates, and row-level security allows public read only. Rows are added
+by hand in the Supabase table editor. Gaps, weekdays and other derived values are not stored; the site
+works them out.
+
+```sql
+create table public.updates (
+  id   bigint generated always as identity primary key,
+  date date not null,
+  time time not null default '19:00',
+  unique (date, time)
+);
+alter table public.updates enable row level security;
+create policy "updates are public" on public.updates for select using (true);
+```
+
+## Adding an update
+
+1. Check it counts (see **What counts** below).
+2. Insert a row in `updates`:
+   - **Friday weekly drop or restart-notice-only Friday:** enter the `date` only. The time defaults to 19:00.
+   - **Anything else** (version drop, map/event, off-day update): enter the `date` and the announcement `time`, in WIB.
+   - **Restart notice for a future slot:** enter its future date and time. The card shows it as confirmed until that day ends.
+3. Redeploy. The data is read at build time only, so the card doesn't change until the next build.
+
+## How the site uses it
+
+- `scripts/fetch-updates.js` runs in `npm run build`, reads the table and writes `data/updates.json`
+  (git-ignored, not public). If the table is unreachable or empty, the build fails.
+- `next.config.ts` builds that file into the code as `UPDATE_ROWS`, so the live site never queries Supabase.
+- `app/lib/updates.ts` holds the model and `app/components/next-update-card.tsx` renders it in the
+  visitor's browser:
+  - Only rows from **2025-07-26** onward (the weekly era) are used. Older rows are kept as history.
+  - Each update is measured as a day offset from the first Friday after the update before it.
+  - Offsets that today has already passed are ruled out.
+  - The card shows the shortest window holding at least **80%** of the remaining outcomes (an 80% HDI).
+    Friday ticks show the cumulative chance by that day.
+  - With fewer than 5 remaining samples it shows **Later than usual** instead.
+
+## Research source
+
+Discord `#update-changelogs` (CDID Official Server), read in full from the first message (1 Feb 2022) to 6 Nov 2026.
 Times are as displayed by Discord in the browser used for scraping. The 21 Nov 2025 post says "GMT+7", so assume **WIB (UTC+7)**.
+The tables below are that scrape and stop at 6 Nov 2026. Later updates are only in Supabase.
 
 ## What counts
 
@@ -147,11 +201,13 @@ Not counted:
 - Map and event posts (#25, #30, #31 and the four added rows) are now counted. Excluded: the refund post (#34), the gacha reroll with new cars (#51) and the rework-only "weekly update" (#57). #31 (V2.5.5) is confirmed by the owner to include cars as well.
 - Rows with a post but no restart notice (for example #2 to #6 in Aug 2025) are counted in Part 1.
 
-Weeks with no notice and no post (Dec 2025, Feb 2026, May 2026, Jul 2026 and a few others) are gaps, not updates. Interval statistics have not been computed yet.
+Weeks with no notice and no post (Dec 2025, Feb 2026, May 2026, Jul 2026 and a few others) are gaps, not updates.
 
 ## Observations (for the predictor)
 
 - Weekly drops go live **Friday 19:00** (owner-confirmed). The varied times in the Part 1 "Post time" column (19:00 to 23:17) are announcement times, not go-live times. The one confirmed exception is Sat 26 Jul 2025 (01:03), a rare outlier.
 - Big version drops fall on irregular days and times (Tue, Wed, Fri, Sat, Sun, Mon).
 - Many Fridays have a restart notice but no post. These are now counted (Part 3), with an estimated 19:00 time.
+- Part 1 lists announcement times, but the table stores 19:00 for Friday weekly drops and for Part 3's counted
+  Fridays. 2025-11-02 (#15, time unknown) is stored as 14:41.
 - Excluded rows: #34, #51, #57 (see Notes column).

@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import type { NextConfig } from "next";
 
 // Release commits to main are named like "Release v0.8.3: ...", so the site version is read from there.
@@ -20,11 +20,24 @@ function getVersion() {
   return JSON.parse(readFileSync("package.json", "utf8")).version as string;
 }
 
+// Update history for the home page's next-update card. scripts/fetch-updates.js copies it from the Supabase
+// `updates` table into data/updates.json before each build; it is inlined into the code here, so the page
+// never queries anything at runtime. Insert a row in Supabase and redeploy to update the card.
+const UPDATES_PATH = "data/updates.json";
+
+function getUpdateRows() {
+  if (!existsSync(UPDATES_PATH)) {
+    throw new Error(`${UPDATES_PATH} is missing. Run \`node scripts/fetch-updates.js\` first.`);
+  }
+  return readFileSync(UPDATES_PATH, "utf8");
+}
+
 const nextConfig: NextConfig = {
   // Car and box data is fetched as part of each build, so this is also when the data was last refreshed.
   env: {
     BUILD_DATE: new Date().toISOString(),
     APP_VERSION: getVersion(),
+    UPDATE_ROWS: getUpdateRows(),
   },
   images: {
     unoptimized: true,

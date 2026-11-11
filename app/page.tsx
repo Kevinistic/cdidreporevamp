@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { CarTile } from "./components/car-tile";
+import { NextUpdateCard } from "./components/next-update-card";
 import { PriceHistogram } from "./components/price-histogram";
 import { cn } from "./lib/cn";
 import { getCars } from "./lib/cars";
 import { getPriceHistogram } from "./lib/price-histogram";
-import { getNextUpdate } from "./lib/updates";
 import repoLogo from "./repo.svg";
 
 const title = "The CDID Database (Unofficial)";
@@ -15,9 +15,6 @@ const description =
   "The unofficial Car Driving Indonesia (CDID) database for Roblox. Browse every car by price, dealership, gamepass and limited status.";
 
 const RECENT_CAR_LIMIT = 6;
-
-// The next-update card is computed from the current time, so refresh the page hourly.
-export const revalidate = 3600;
 
 // Sociabuzz has no API, so update the raised amount by hand.
 const DONATION_GOAL = 300_000;
@@ -85,7 +82,6 @@ export default async function HomePage() {
     .filter((car) => car.New)
     .sort((a, b) => b.Price - a.Price)
     .slice(0, RECENT_CAR_LIMIT);
-  const nextUpdate = getNextUpdate();
   const prices = cars.map((car) => car.Price);
   const priceHistogram = getPriceHistogram(prices);
   const medianPrice = [...prices].sort((a, b) => a - b)[prices.length >> 1] ?? 0;
@@ -143,35 +139,7 @@ export default async function HomePage() {
       ) : null}
 
       <div className="grid gap-3 md:grid-cols-2">
-        <section aria-label="Next update" className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xs uppercase tracking-[0.2em] text-zinc-400">Next update</h2>
-            <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400">{nextUpdate.badge}</span>
-          </div>
-          <p className="text-xl font-bold text-accent md:text-2xl">{nextUpdate.headline}</p>
-          <div className="space-y-1" aria-hidden="true">
-            <div className="relative h-2 rounded-full bg-zinc-800">
-              <div
-                className={cn("absolute inset-y-0 rounded-full", nextUpdate.timeline.muted ? "bg-zinc-600" : "bg-accent")}
-                style={{ left: `${nextUpdate.timeline.from}%`, width: `${nextUpdate.timeline.to - nextUpdate.timeline.from}%` }}
-              />
-              {nextUpdate.timeline.nowAt === null ? null : (
-                <div
-                  className="absolute -inset-y-1 w-0.5 -translate-x-1/2 rounded-full bg-white"
-                  style={{ left: `${nextUpdate.timeline.nowAt}%` }}
-                />
-              )}
-            </div>
-            <div className="relative h-4 text-xs text-zinc-500">
-              {nextUpdate.timeline.ticks.map(({ label, at }) => (
-                <span key={label} className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${at}%` }}>
-                  {label}
-                </span>
-              ))}
-            </div>
-          </div>
-          <p className="text-xs text-zinc-500">{nextUpdate.fineprint}</p>
-        </section>
+        <NextUpdateCard />
 
         {priceHistogram ? (
           <div className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
@@ -192,8 +160,8 @@ export default async function HomePage() {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
-          <div className="space-y-1">
+        <div className="flex flex-col items-start justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
+          <div className="w-full space-y-1">
             <p className="font-bold">Join the Discord</p>
             <p className="text-sm text-zinc-400">Report inaccurate info, suggest features, and hear about updates.</p>
           </div>
@@ -208,8 +176,8 @@ export default async function HomePage() {
           </a>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
-          <div className="space-y-1">
+        <div className="flex flex-col items-start justify-between gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-4">
+          <div className="w-full space-y-1">
             <p className="font-bold">Support the project</p>
             <p className="text-sm text-zinc-400">CDIDRepo is free. All money will proceed towards getting a web domain. Only donate when you&apos;re willing and able to!</p>
             <div className="space-y-1 pt-1">

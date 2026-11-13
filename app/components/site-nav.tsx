@@ -27,7 +27,9 @@ export function SiteNav() {
         aria-label="Main"
         className="sticky top-0 z-30 flex h-[var(--nav-h)] shrink-0 items-center gap-4 border-b border-zinc-700 bg-black px-3 text-sm"
       >
-        <Link href="/" className="shrink-0">
+        {/* No prefetch on nav links: they're on every page, so prefetching them loaded /, /car, /box and /tool
+            in the background on every page view, about as many CDN requests as real visits. */}
+        <Link href="/" prefetch={false} className="shrink-0">
           <Image src={repoLogo} alt="CDID Repo" width={32} height={32} />
         </Link>
 
@@ -45,6 +47,7 @@ export function SiteNav() {
             <Link
               key={href}
               href={href}
+              prefetch={false}
               aria-current={active ? "page" : undefined}
               // Already here: following the link would drop the filter params from the URL but keep the filters.
               onClick={(event) => {

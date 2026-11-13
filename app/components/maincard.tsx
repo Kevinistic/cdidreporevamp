@@ -115,7 +115,7 @@ export function CarDetails({ card, boxes = [] }: { card: CardItem; boxes?: BoxLi
               {boxes.map((box, index) => (
                 <span key={box.slug}>
                   {index > 0 ? ", " : null}
-                  <Link href={`/box#${box.slug}`} className="text-accent hover:underline">
+                  <Link href={`/box#${box.slug}`} prefetch={false} className="text-accent hover:underline">
                     {box.name}
                   </Link>
                 </span>
@@ -144,8 +144,9 @@ export function CarDetails({ card, boxes = [] }: { card: CardItem; boxes?: BoxLi
   );
 }
 
-// Only shown by the intercepted /car/[token] route, so closing is always a history step back to the grid.
-// A direct load of that URL renders the standalone page in app/car/[token] instead.
+// Opened by a history step from the page behind it: the car grid opens it from data it already holds, and
+// links on other pages open it through the intercepted /car/[token] route. Either way, closing is a history step
+// back. A direct load of that URL renders the standalone page in app/car/[token] instead.
 export function CarModal({ card, boxes }: { card: CardItem; boxes?: BoxLink[] }) {
   const router = useRouter();
   // The modal stays up until the navigation lands, so a double click or held Escape would

@@ -18,7 +18,7 @@ export default function NotFound() {
       />
       <h1 className="text-2xl font-bold">404 – Page not found</h1>
       <p className="text-zinc-400">This page doesn&apos;t exist, or the car has been removed.</p>
-      <Link href="/" className="rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium hover:bg-zinc-700">
+      <Link href="/" prefetch={false} className="rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium hover:bg-zinc-700">
         Back to the database
       </Link>
     </main>

@@ -115,7 +115,7 @@ export function CarDetails({ card, boxes = [] }: { card: CardItem; boxes?: BoxLi
               {boxes.map((box, index) => (
                 <span key={box.slug}>
                   {index > 0 ? ", " : null}
-                  <Link href={`/box#${box.slug}`} className="text-accent hover:underline">
+                  <Link href={`/box#${box.slug}`} prefetch={false} className="text-accent hover:underline">
                     {box.name}
                   </Link>
                 </span>

@@ -39,6 +39,15 @@ const nextConfig: NextConfig = {
     APP_VERSION: getVersion(),
     UPDATE_ROWS: getUpdateRows(),
   },
+  experimental: {
+    // How long a tab reuses a page it already fetched before asking the CDN again (default 5 minutes). Every page
+    // is static and its data only changes on redeploy, so a tab keeps pages for a week: going back and forth
+    // between pages costs one CDN request per page, not one per visit. A tab left open across a deploy shows the
+    // old data until it is refreshed. This is the browser's in-memory cache only; refreshes and new tabs still fetch.
+    staleTimes: {
+      static: 7 * 24 * 60 * 60,
+    },
+  },
   images: {
     unoptimized: true,
     remotePatterns: [

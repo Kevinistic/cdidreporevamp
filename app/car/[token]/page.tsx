@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CarDetails } from "../../components/maincard";
 import { getBoxesForCar } from "../../lib/boxes";
@@ -62,13 +61,16 @@ export default async function CarPage({ params }: CarPageProps) {
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-4 py-6">
       <h1 className="sr-only">{car.CarName}</h1>
       <div>
-        <Link
+        {/* A plain <a> on purpose: a full page load clears the client router cache. With <Link>, the router keeps
+            this full page cached under /car/<token>, so clicking the same car's tile on the grid later shows this page
+            again instead of opening the modal. Costs one static HTML request instead of one RSC request. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a
           href="/car"
-          prefetch={false}
           className="inline-block rounded-md border border-zinc-600 bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800"
         >
           Browse all cars
-        </Link>
+        </a>
       </div>
       <div className="flex flex-col gap-6 rounded-2xl border border-zinc-700 bg-zinc-950 p-6 md:flex-row md:items-center md:justify-between">
         <CarDetails card={car} boxes={await getBoxesForCar(car._id)} />

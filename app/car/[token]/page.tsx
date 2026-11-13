@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CarDetails } from "../../components/maincard";
 import { getBoxesForCar } from "../../lib/boxes";
@@ -9,7 +10,8 @@ type CarPageProps = { params: Promise<{ token: string }> };
 // Every car page is built at deploy, so visits are plain static files: no function, no ISR reads or writes.
 // That is only affordable because this page holds one car (a few KB), not the whole car list. Don't add the
 // grid back here: at 1.37 MB a page, 2,787 prebuilt pages filled the deployment storage quota.
-// Clicking a tile inside the site opens the modal from app/@modal instead, over the grid.
+// Inside the site, a tile on the car grid opens the modal from the grid's own data (components/home-client), and
+// car links on other pages open it through app/@modal.
 export async function generateStaticParams() {
   const cars = await getCars();
   return cars.map((car) => ({ token: car.token }));
@@ -61,16 +63,13 @@ export default async function CarPage({ params }: CarPageProps) {
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-4 py-6">
       <h1 className="sr-only">{car.CarName}</h1>
       <div>
-        {/* A plain <a> on purpose: a full page load clears the client router cache. With <Link>, the router keeps
-            this full page cached under /car/<token>, so clicking the same car's tile on the grid later shows this page
-            again instead of opening the modal. Costs one static HTML request instead of one RSC request. */}
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-        <a
+        <Link
           href="/car"
+          prefetch={false}
           className="inline-block rounded-md border border-zinc-600 bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800"
         >
           Browse all cars
-        </a>
+        </Link>
       </div>
       <div className="flex flex-col gap-6 rounded-2xl border border-zinc-700 bg-zinc-950 p-6 md:flex-row md:items-center md:justify-between">
         <CarDetails card={car} boxes={await getBoxesForCar(car._id)} />

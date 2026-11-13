@@ -80,6 +80,18 @@ export async function getBoxesForCar(carId: string): Promise<BoxLink[]> {
     .map(({ slug, name }) => ({ slug, name }));
 }
 
+// Box links for every car that drops from a box, keyed by car _id. The car grid gets this with its car list,
+// so its modal lists boxes without a request. Cars in no box are left out to keep the page small.
+export async function getBoxLinksByCar(): Promise<Record<string, BoxLink[]>> {
+  const boxes = await getBoxes();
+  const byCar: Record<string, BoxLink[]> = {};
+  for (const { slug, name, tiers } of boxes) {
+    const carIds = new Set(tiers.flatMap((tier) => tier.items.flatMap((item) => (item.carId ? [item.carId] : []))));
+    for (const carId of carIds) (byCar[carId] ??= []).push({ slug, name });
+  }
+  return byCar;
+}
+
 export function getBoxItemImage(item: BoxItem): string | undefined {
   if (item.car?.CarImageUrl) return item.car.CarImageUrl;
   return item.imageId ? `${BOX_IMAGE_BASE_URL}${item.imageId}.png` : undefined;

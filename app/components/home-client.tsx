@@ -2,21 +2,36 @@
 
 import { SidebarFilters } from "./sidebar-filters";
 import { CardsGrid } from "./cards-grid";
+import { usePathname } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import type { CardItem } from "./card";
+import { CarModal } from "./maincard";
 import type { Filters } from "./sidebar-filters";
 import { SlidersHorizontal } from 'lucide-react';
 import { Pagination } from "./pagination-bar";
+import type { BoxLink } from "../lib/boxes";
 import { cn } from "../lib/cn";
 import { useFilteredCars } from "../lib/use-filtered-cars";
 
 const PAGE_SIZE = 40;
+const CAR_PATH_PREFIX = "/car/";
 
 type HomeClientProps = {
   cars: CardItem[];
+  boxesByCar: Record<string, BoxLink[]>;
 };
 
-export default function HomeClient({ cars }: HomeClientProps) {
+export default function HomeClient({ cars, boxesByCar }: HomeClientProps) {
+  // The open car lives in the URL (/car/<token>) so Back closes the modal, Forward reopens it, and the link can be
+  // shared. Opening only pushes a history entry: Next keeps rendering this page and the data is already here,
+  // so no request is made. A refresh or a shared link loads the full page from app/car/[token] instead.
+  const pathname = usePathname();
+  const carsByToken = useMemo(() => new Map(cars.map((car) => [car.token, car])), [cars]);
+  const openCar = pathname.startsWith(CAR_PATH_PREFIX)
+    ? carsByToken.get(pathname.slice(CAR_PATH_PREFIX.length))
+    : undefined;
+  const openCarModal = (card: CardItem) => window.history.pushState(null, "", `${CAR_PATH_PREFIX}${card.token}`);
+
   // null until mounted: the server can't know the screen width, so CSS picks the default
   // (open on desktop, closed on mobile) and the first paint already matches the screen.
   const [isSidebarVisible, setIsSidebarVisible] = useState<boolean | null>(null);
@@ -140,8 +155,10 @@ export default function HomeClient({ cars }: HomeClientProps) {
           {resultSummary}
         </div>
 
-        <CardsGrid cards={pagedRows} />
+        <CardsGrid cards={pagedRows} onOpenCard={openCarModal} />
       </main>
+
+      {openCar ? <CarModal key={openCar.token} card={openCar} boxes={boxesByCar[openCar._id]} /> : null}
     </div>
   );
 }

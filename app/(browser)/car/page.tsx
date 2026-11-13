@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import HomeClient from "../../components/home-client";
+import { getBoxLinksByCar } from "../../lib/boxes";
 import { getCars } from "../../lib/cars";
 
 const title = "The CDID Database (Unofficial)";
@@ -25,6 +26,6 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const cars = await getCars();
-  return <HomeClient cars={cars} />;
+  const [cars, boxesByCar] = await Promise.all([getCars(), getBoxLinksByCar()]);
+  return <HomeClient cars={cars} boxesByCar={boxesByCar} />;
 }

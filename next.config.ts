@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { availableParallelism } from "node:os";
 import type { NextConfig } from "next";
 
 // Release commits to main are named like "Release v0.8.3: ...", so the site version is read from there.
@@ -42,6 +43,9 @@ const nextConfig: NextConfig = {
     UPDATE_ROWS: getUpdateRows(),
   },
   experimental: {
+    // Workers that prerender pages (~2,800 car pages). Next defaults to one fewer than the CPU count, which is a
+    // single worker on Cloudflare's 2-CPU build machine; page generation is CPU-bound, so use every CPU.
+    cpus: availableParallelism(),
     // How long a tab reuses a page it already fetched before asking the CDN again (default 5 minutes). Every page
     // is static and its data only changes on redeploy, so a tab keeps pages for a week: going back and forth
     // between pages costs one CDN request per page, not one per visit. A tab left open across a deploy shows the

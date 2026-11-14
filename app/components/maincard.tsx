@@ -144,9 +144,9 @@ export function CarDetails({ card, boxes = [] }: { card: CardItem; boxes?: BoxLi
   );
 }
 
-// Opened by the car grid, which pushes /car/<token> onto the history and renders this from data it already holds,
-// so closing is a history step back. Any other load of that URL (shared link, refresh, a car link on another page)
-// renders the standalone page in app/car/[token] instead.
+// Opened by the car grid, and by CarModalArea on the home and box pages: they push /car/<token> onto the history
+// and render this from data they already hold (lib/use-car-modal), so closing is a history step back. Any other load
+// of that URL (shared link, refresh, new tab) renders the standalone page in app/car/[token] instead.
 export function CarModal({ card, boxes }: { card: CardItem; boxes?: BoxLink[] }) {
   const router = useRouter();
   // The modal stays up until the navigation lands, so a double click or held Escape would

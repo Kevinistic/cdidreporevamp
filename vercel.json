@@ -1,0 +1,10 @@
+{
+  "framework": null,
+  "installCommand": "echo skip",
+  "buildCommand": "echo skip",
+  "outputDirectory": "public",
+  "redirects": [
+    { "source": "/", "destination": "https://cdidrepo.web.id/", "statusCode": 301 },
+    { "source": "/:path*", "destination": "https://cdidrepo.web.id/:path*", "statusCode": 301 }
+  ]
+}

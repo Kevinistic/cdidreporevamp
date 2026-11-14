@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { CarModalArea } from "../components/car-modal-area";
 import { PageTabs } from "../components/page-tabs";
 import { formatBoxPrice, formatOdds, ITEM_ICONS, TIER_COLORS } from "../lib/box-display";
-import { getBoxes, getBoxItemImage, type Box, type BoxItem } from "../lib/boxes";
+import { getBoxes, getBoxItemImage, getBoxLinksByCar, type Box, type BoxItem } from "../lib/boxes";
 import { cn } from "../lib/cn";
 
 const title = "The CDID Database (Unofficial)";
@@ -46,7 +47,8 @@ function ItemRow({ item, odds }: { item: BoxItem; odds: string }) {
   const className = "flex items-center gap-3 px-3 py-1.5";
 
   return item.car ? (
-    // A plain <a>, not next/link: car pages are opened by a full page load only (see app/car/[token]).
+    // A plain <a>, not next/link: the client router must never navigate to a car page (see app/car/[token]).
+    // A plain click opens the car modal instead (CarModalArea in BoxesPage).
     <a href={`/car/${item.car.token}`} className={cn(className, "hover:bg-zinc-900 hover:text-accent")}>
       {content}
     </a>
@@ -88,22 +90,32 @@ function BoxPanel({ box }: { box: Box }) {
 }
 
 export default async function BoxesPage() {
-  const boxes = await getBoxes();
+  const [boxes, boxesByCar] = await Promise.all([getBoxes(), getBoxLinksByCar()]);
   const heading = <h1 className="text-2xl font-bold">Boxes</h1>;
+  // Every car any box drops, once each, so a click on its row opens the car modal without loading its page.
+  const boxCars = [
+    ...new Map(
+      boxes.flatMap((box) =>
+        box.tiers.flatMap((tier) => tier.items.flatMap((item) => (item.car ? [[item.car._id, item.car] as const] : [])))
+      )
+    ).values(),
+  ];
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 lg:py-4">
       {boxes.length > 0 ? (
-        <PageTabs
-          heading={heading}
-          label="Boxes"
-          tabs={boxes.map((box) => ({
-            slug: box.slug,
-            label: box.name.replace(/ Box$/, ""),
-            aside: formatBoxPrice(box),
-            content: <BoxPanel box={box} />,
-          }))}
-        />
+        <CarModalArea cars={boxCars} boxesByCar={boxesByCar}>
+          <PageTabs
+            heading={heading}
+            label="Boxes"
+            tabs={boxes.map((box) => ({
+              slug: box.slug,
+              label: box.name.replace(/ Box$/, ""),
+              aside: formatBoxPrice(box),
+              content: <BoxPanel box={box} />,
+            }))}
+          />
+        </CarModalArea>
       ) : (
         <>
           {heading}

@@ -5,7 +5,7 @@ import { cn } from "../lib/cn";
 type CarTileProps = {
   card: CardItem;
   // Given on the car grid, which already holds every car: a plain click opens the modal from memory instead
-  // of navigating, so it costs no request.
+  // of navigating, so it costs no request. Elsewhere a CarModalArea around the tiles does the same.
   onOpen?: (card: CardItem) => void;
 };
 

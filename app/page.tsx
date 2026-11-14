@@ -2,9 +2,11 @@ import { BookOpen, Calculator, CarFront, Heart, Package, type LucideIcon } from 
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { CarModalArea } from "./components/car-modal-area";
 import { CarTile } from "./components/car-tile";
 import { NextUpdateCard } from "./components/next-update-card";
 import { PriceHistogram } from "./components/price-histogram";
+import { getBoxLinksByCar } from "./lib/boxes";
 import { cn } from "./lib/cn";
 import { getCars } from "./lib/cars";
 import { getPriceHistogram } from "./lib/price-histogram";
@@ -76,12 +78,16 @@ function SectionTile({ icon: Icon, name, detail, href }: SectionTileProps) {
 }
 
 export default async function HomePage() {
-  const cars = await getCars();
+  const [cars, allBoxesByCar] = await Promise.all([getCars(), getBoxLinksByCar()]);
   // Same order as /car's default sort, most expensive first.
   const recentCars = cars
     .filter((car) => car.New)
     .sort((a, b) => b.Price - a.Price)
     .slice(0, RECENT_CAR_LIMIT);
+  // Only the shown cars' boxes go to the modal, so the page doesn't carry box links it can't open.
+  const recentBoxesByCar = Object.fromEntries(
+    recentCars.flatMap((car) => (allBoxesByCar[car._id] ? [[car._id, allBoxesByCar[car._id]] as const] : []))
+  );
   const prices = cars.map((car) => car.Price);
   const priceHistogram = getPriceHistogram(prices);
   const medianPrice = [...prices].sort((a, b) => a - b)[prices.length >> 1] ?? 0;
@@ -130,11 +136,16 @@ export default async function HomePage() {
               View all new cars
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
+          {/* A click on a tile opens the car modal from these cars instead of loading the car page. */}
+          <CarModalArea
+            cars={recentCars}
+            boxesByCar={recentBoxesByCar}
+            className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6"
+          >
             {recentCars.map((card) => (
               <CarTile key={card._id} card={card} />
             ))}
-          </div>
+          </CarModalArea>
         </section>
       ) : null}
 

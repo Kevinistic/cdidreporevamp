@@ -1,9 +1,10 @@
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { availableParallelism } from "node:os";
 import type { NextConfig } from "next";
 
 // Release commits to main are named like "Release v0.8.3: ...", so the site version is read from there.
-// Cloudflare Pages builds from a git clone but exposes no commit message, so this reads the latest matching
+// Cloudflare Workers Builds builds from a git clone but exposes no commit message, so this reads the latest matching
 // commit from git, then falls back to package.json (for example when the clone is too shallow to reach one).
 const VERSION_PATTERN = /v(\d+\.\d+\.\d+[a-z]?)/;
 
@@ -32,7 +33,7 @@ function getUpdateRows() {
 }
 
 const nextConfig: NextConfig = {
-  // Cloudflare Pages serves the site as plain static files from `out/`: no server, no ISR, no intercepting routes.
+  // Cloudflare serves the site as plain static files from `out/` (see wrangler.jsonc): no server, no ISR, no intercepting routes.
   // scripts/prune-export.js then trims files the site never requests, to stay under the 20,000 files per deploy.
   output: "export",
   // Car and box data is fetched as part of each build, so this is also when the data was last refreshed.
@@ -42,6 +43,9 @@ const nextConfig: NextConfig = {
     UPDATE_ROWS: getUpdateRows(),
   },
   experimental: {
+    // Workers that prerender pages (~2,800 car pages). Next defaults to one fewer than the CPU count, which is a
+    // single worker on Cloudflare's 2-CPU build machine; page generation is CPU-bound, so use every CPU.
+    cpus: availableParallelism(),
     // How long a tab reuses a page it already fetched before asking the CDN again (default 5 minutes). Every page
     // is static and its data only changes on redeploy, so a tab keeps pages for a week: going back and forth
     // between pages costs one CDN request per page, not one per visit. A tab left open across a deploy shows the

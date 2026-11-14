@@ -1,14 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 
-// Runs after `next build`. Cloudflare Pages takes at most 20,000 files per deploy, and the static export writes
+// Runs after `next build`. Cloudflare static assets take at most 20,000 files per deploy, and the static export writes
 // about 9 per car page: <token>.html, the <token>.txt RSC payload, and a <token>/ folder of __next.*.txt
 // segment-prefetch files. Car pages are only ever opened by a full page load (shared link, refresh, new tab, or
 // the plain <a> car links on the home and box pages), never by the client router, so only their .html is used.
 // /car's own segment files also live in out/car/ but are named __next.*.txt, so they are kept.
 const OUT_DIR = path.join(process.cwd(), "out");
 const CAR_DIR = path.join(OUT_DIR, "car");
-// Pages' hard limit is 20,000; fail early with some room to spare instead of at upload.
+// Cloudflare's hard limit is 20,000; fail early with some room to spare instead of at upload.
 const MAX_FILES = 19000;
 
 function countFiles(dir) {
@@ -43,7 +43,7 @@ function run() {
     `Pruned ${removedDirs} car segment folders and ${removedPayloads} car RSC payloads. out/ now holds ${total} files.`
   );
   if (total > MAX_FILES) {
-    console.error(`out/ holds ${total} files, over the ${MAX_FILES} budget (Cloudflare Pages allows 20,000).`);
+    console.error(`out/ holds ${total} files, over the ${MAX_FILES} budget (Cloudflare allows 20,000).`);
     process.exit(1);
   }
 }

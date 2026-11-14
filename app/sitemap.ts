@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 import { getCars } from "./lib/cars";
 import { SITE_URL } from "./lib/site";
 
+// Static export only writes route handlers (sitemap.xml is one) that are explicitly static.
+export const dynamic = "force-static";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const cars = await getCars();
   return [

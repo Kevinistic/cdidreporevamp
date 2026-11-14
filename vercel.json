@@ -4,6 +4,7 @@
   "buildCommand": "echo skip",
   "outputDirectory": "public",
   "redirects": [
+    { "source": "/", "destination": "https://cdidrepo.web.id/", "permanent": true },
     { "source": "/:path*", "destination": "https://cdidrepo.web.id/:path*", "permanent": true }
   ]
 }

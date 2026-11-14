@@ -62,4 +62,4 @@ The site is a static export served by the `cdidrepo` Cloudflare Worker as static
 
 `scripts/prune-export.js` keeps the deploy under the 20,000-file static assets limit by deleting the car pages' client-navigation files, so car links must stay plain `<a>` tags. Cache headers for hashed assets are in `public/_headers`. To check a build locally, serve `out/` with any static server (`next start` doesn't work with a static export).
 
-The old Vercel project only redirects now: `vercel.json` skips the install and build there and sends every `cdidrepo.vercel.app` URL to the same path on `cdidrepo.web.id` (308). Keep that project alive, or old shared links stop working.
+The old Vercel project only redirects now: `vercel.json` skips the install and build there and sends every `cdidrepo.vercel.app` URL to the same path on `cdidrepo.web.id` (301, which Google's Change of Address tool expects). Keep that project alive, or old shared links stop working.

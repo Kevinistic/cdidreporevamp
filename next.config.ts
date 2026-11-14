@@ -3,12 +3,11 @@ import { existsSync, readFileSync } from "node:fs";
 import type { NextConfig } from "next";
 
 // Release commits to main are named like "Release v0.8.3: ...", so the site version is read from there.
-// Vercel provides the commit message; locally it falls back to the latest matching commit, then package.json.
+// Cloudflare Pages builds from a git clone but exposes no commit message, so this reads the latest matching
+// commit from git, then falls back to package.json (for example when the clone is too shallow to reach one).
 const VERSION_PATTERN = /v(\d+\.\d+\.\d+[a-z]?)/;
 
 function getVersion() {
-  const fromEnv = process.env.VERCEL_GIT_COMMIT_MESSAGE?.match(VERSION_PATTERN);
-  if (fromEnv) return fromEnv[1];
   try {
     const subject = execSync('git log -1 -E --grep="v[0-9]+\\.[0-9]+\\.[0-9]+" --format=%s', {
       encoding: "utf8",
@@ -33,6 +32,9 @@ function getUpdateRows() {
 }
 
 const nextConfig: NextConfig = {
+  // Cloudflare Pages serves the site as plain static files from `out/`: no server, no ISR, no intercepting routes.
+  // scripts/prune-export.js then trims files the site never requests, to stay under the 20,000 files per deploy.
+  output: "export",
   // Car and box data is fetched as part of each build, so this is also when the data was last refreshed.
   env: {
     BUILD_DATE: new Date().toISOString(),

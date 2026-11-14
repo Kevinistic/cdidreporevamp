@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getCars } from "./lib/cars";
-
-const SITE_URL = "https://cdidrepo.vercel.app";
+import { SITE_URL } from "./lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const cars = await getCars();

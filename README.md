@@ -35,8 +35,7 @@ Run the fetch scripts again whenever you want fresh data locally. Without the JS
 ## Scripts
 
 - `npm run dev`: start the dev server
-- `npm run build`: fetch car and box data, then build for production
-- `npm run start`: serve the production build
+- `npm run build`: fetch car and box data, build the static export into `out/`, then prune it (`scripts/prune-export.js`)
 - `npm run lint`: run ESLint
 
 ## Project layout
@@ -46,7 +45,19 @@ Run the fetch scripts again whenever you want fresh data locally. Without the JS
 - `app/(browser)/`: the `/car` list and `/car/<token>` pages, in a fixed-height shell that scrolls internally
 - `app/box/`: the `/box` page, with a tab for each box
 - `app/tool/`: the `/tool` page, with the price calculator, box simulator, and box odds
-- `app/@modal/`: the car modal, shown when a `/car/<token>` link is followed from inside the site
 - `app/components/`: UI components (sidebar filters, grid, pagination, modals)
 - `app/lib/`: data loading, the `useFilteredCars` hook and small helpers
 - `scripts/fetch-cars.js`, `scripts/fetch-boxes.js`: build-time data fetches from Supabase
+
+## Deploy
+
+The site is a static export hosted on Cloudflare Pages at <https://cdidrepo.web.id>. Pages builds from GitHub: `main` deploys to production, `staging` to `staging.cdidrepo.pages.dev`.
+
+| Setting | Value |
+| --- | --- |
+| Build command | `npm run build` |
+| Build output directory | `out` |
+| Node version | from `.node-version` |
+| Environment variables | the ones above, for Production and Preview. `CAR_TOKEN_SECRET` must keep its old value or every shared car link breaks |
+
+`scripts/prune-export.js` keeps the deploy under Pages' 20,000-file limit by deleting the car pages' client-navigation files, so car links must stay plain `<a>` tags. Cache headers for hashed assets are in `public/_headers`. To check a build locally, serve `out/` with any static server (`next start` doesn't work with a static export).

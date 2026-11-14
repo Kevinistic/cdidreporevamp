@@ -35,8 +35,8 @@ yarn-error.log*
 /public/data/*.json
 /data/updates.json
 
-# vercel
-.vercel
+# cloudflare
+.wrangler
 
 # typescript
 *.tsbuildinfo

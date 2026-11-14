@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { CardItem } from "./card";
 import { cn } from "../lib/cn";
 
@@ -12,10 +11,9 @@ type CarTileProps = {
 
 export function CarTile({ card, onOpen }: CarTileProps) {
   return (
-    <Link
+    // A plain <a>, not next/link: car pages are opened by a full page load only (see app/car/[token]).
+    <a
       href={`/car/${card.token}`}
-      // Prefetching every visible tile fires hundreds of CDN requests per grid view.
-      prefetch={false}
       onClick={
         onOpen
           ? (event) => {
@@ -46,6 +44,6 @@ export function CarTile({ card, onOpen }: CarTileProps) {
           />
         </div>
       )}
-    </Link>
+    </a>
   );
 }

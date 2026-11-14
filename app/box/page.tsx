@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { PageTabs } from "../components/page-tabs";
 import { formatBoxPrice, formatOdds, ITEM_ICONS, TIER_COLORS } from "../lib/box-display";
 import { getBoxes, getBoxItemImage, type Box, type BoxItem } from "../lib/boxes";
@@ -47,10 +46,10 @@ function ItemRow({ item, odds }: { item: BoxItem; odds: string }) {
   const className = "flex items-center gap-3 px-3 py-1.5";
 
   return item.car ? (
-    // No prefetch: every visible item would otherwise fetch its car page in the background (16 requests per /box visit).
-    <Link href={`/car/${item.car.token}`} prefetch={false} className={cn(className, "hover:bg-zinc-900 hover:text-accent")}>
+    // A plain <a>, not next/link: car pages are opened by a full page load only (see app/car/[token]).
+    <a href={`/car/${item.car.token}`} className={cn(className, "hover:bg-zinc-900 hover:text-accent")}>
       {content}
-    </Link>
+    </a>
   ) : (
     <div className={className}>{content}</div>
   );

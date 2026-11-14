@@ -67,7 +67,7 @@ function SectionTile({ icon: Icon, name, detail, href }: SectionTileProps) {
     "flex min-h-36 flex-col justify-between gap-4 rounded-lg border bg-zinc-950 p-4";
 
   return href ? (
-    <Link href={href} className={cn(className, "border-zinc-700 hover:border-accent")}>
+    <Link href={href} prefetch={false} className={cn(className, "border-zinc-700 hover:border-accent")}>
       {content}
     </Link>
   ) : (
@@ -126,7 +126,7 @@ export default async function HomePage() {
         <section className="space-y-3">
           <div className="flex items-baseline justify-between gap-4">
             <h2 className="text-xs uppercase tracking-[0.2em] text-zinc-400">Recently added</h2>
-            <Link href="/car?type=new" className="text-sm text-accent hover:underline">
+            <Link href="/car?type=new" prefetch={false} className="text-sm text-accent hover:underline">
               View all new cars
             </Link>
           </div>
@@ -150,7 +150,7 @@ export default async function HomePage() {
                   Log scale, {cars.length} cars. Median {formatRupiah(medianPrice)}.
                 </p>
               </div>
-              <Link href="/histogram" className="shrink-0 text-sm text-accent hover:underline">
+              <Link href="/histogram" prefetch={false} className="shrink-0 text-sm text-accent hover:underline">
                 Full histogram
               </Link>
             </div>

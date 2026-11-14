@@ -10,7 +10,10 @@ type CarPageProps = { params: Promise<{ token: string }> };
 // Every car page is built at deploy, so visits are plain static files: no function, no ISR reads or writes.
 // That is only affordable because this page holds one car (a few KB), not the whole car list. Don't add the
 // grid back here: at 1.37 MB a page, 2,787 prebuilt pages filled the deployment storage quota.
-// Clicking a tile inside the site opens the modal from app/@modal instead, over the grid.
+// Inside the site, a tile on the car grid opens the modal from the grid's own data (components/home-client); car
+// links on other pages are plain <a> tags that load this page in full. scripts/prune-export.js deletes these pages'
+// RSC and segment files after the build (they would push the deploy past Cloudflare's 20,000-file limit), so the
+// client router must never navigate here: don't turn those links into next/link.
 export async function generateStaticParams() {
   const cars = await getCars();
   return cars.map((car) => ({ token: car.token }));

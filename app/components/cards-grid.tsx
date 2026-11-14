@@ -6,9 +6,10 @@ import { CarTile } from "./car-tile";
 
 type CardsGridProps = {
   cards: CardItem[];
+  onOpenCard: (card: CardItem) => void;
 };
 
-export function CardsGrid({ cards }: CardsGridProps) {
+export function CardsGrid({ cards, onOpenCard }: CardsGridProps) {
   const gridRef = useRef<HTMLElement>(null);
 
   // Keyed on the rows rather than the page number, so a filter change on page 1 also scrolls to the top.
@@ -29,7 +30,7 @@ export function CardsGrid({ cards }: CardsGridProps) {
       ) : null}
       <div className="grid gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {cards.map((card) => (
-          <CarTile key={card._id} card={card} />
+          <CarTile key={card._id} card={card} onOpen={onOpenCard} />
         ))}
       </div>
     </section>

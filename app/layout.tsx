@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next"
 import { SiteFooter } from "./components/site-footer";
 import { SiteNav } from "./components/site-nav";
+import { SITE_URL } from "./lib/site";
 import "./globals.css";
 
 const title = "CDID Repo (Unofficial)";
@@ -9,7 +9,7 @@ const description = "An unofficial database for Car Driving Indonesia (CDID) on 
 
 // No canonical here: child pages inherit it, so each page sets its own.
 export const metadata: Metadata = {
-  metadataBase: new URL("https://cdidrepo.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   verification: { google: "o-9If2ceDADp2A5IdRoaaJIveYK97SMG3QWfYUq0Ri8" },
   title: { default: title, template: "%s | CDID Repo" },
   description,
@@ -29,10 +29,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  modal,
 }: Readonly<{
   children: React.ReactNode;
-  modal: React.ReactNode;
 }>) {
   return (
     <html lang="en">
@@ -40,8 +38,6 @@ export default function RootLayout({
         <SiteNav />
         {children}
         <SiteFooter />
-        {modal}
-        <Analytics />
       </body>
     </html>
   );

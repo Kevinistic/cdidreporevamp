@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/fetch-cars.js && node scripts/fetch-boxes.js && node scripts/fetch-updates.js && next build",
-    "start": "next start",
+    "build": "node scripts/fetch-cars.js && node scripts/fetch-boxes.js && node scripts/fetch-updates.js && next build && node scripts/prune-export.js",
     "lint": "eslint"
   },
   "browserslist": [
@@ -17,7 +16,6 @@
   ],
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
-    "@vercel/analytics": "^2.0.1",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "react": "19.2.4",

@@ -1,14 +1,29 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { CardItem } from "./card";
 import { cn } from "../lib/cn";
 
-export function CarTile({ card }: { card: CardItem }) {
+type CarTileProps = {
+  card: CardItem;
+  // Given on the car grid, which already holds every car: a plain click opens the modal from memory instead
+  // of navigating, so it costs no request.
+  onOpen?: (card: CardItem) => void;
+};
+
+export function CarTile({ card, onOpen }: CarTileProps) {
   return (
-    <Link
+    // A plain <a>, not next/link: car pages are opened by a full page load only (see app/car/[token]).
+    <a
       href={`/car/${card.token}`}
-      // Prefetching every visible tile fires hundreds of CDN requests per grid view.
-      prefetch={false}
+      onClick={
+        onOpen
+          ? (event) => {
+              // Modified and middle clicks keep the link, so "open in new tab" still loads the full car page.
+              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault();
+              onOpen(card);
+            }
+          : undefined
+      }
       className={cn(
         "flex h-full flex-col justify-between rounded-lg border border-zinc-700 hover:border-accent p-2 text-white shadow-sm",
         card.Legacy ? "bg-[#230405]" : "bg-zinc-950"
@@ -29,6 +44,6 @@ export function CarTile({ card }: { card: CardItem }) {
           />
         </div>
       )}
-    </Link>
+    </a>
   );
 }

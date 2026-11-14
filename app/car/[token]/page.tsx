@@ -10,8 +10,9 @@ type CarPageProps = { params: Promise<{ token: string }> };
 // Every car page is built at deploy, so visits are plain static files: no function, no ISR reads or writes.
 // That is only affordable because this page holds one car (a few KB), not the whole car list. Don't add the
 // grid back here: at 1.37 MB a page, 2,787 prebuilt pages filled the deployment storage quota.
-// Inside the site, a tile on the car grid opens the modal from the grid's own data (components/home-client); car
-// links on other pages are plain <a> tags that load this page in full. scripts/prune-export.js deletes these pages'
+// Inside the site, car links on the car grid, the home page and the box page open the modal from that page's own
+// data (lib/use-car-modal) instead of loading this page. They are plain <a> tags, so a new tab, a refresh or a shared
+// link still loads this page in full. scripts/prune-export.js deletes these pages'
 // RSC and segment files after the build (they would push the deploy past Cloudflare's 20,000-file limit), so the
 // client router must never navigate here: don't turn those links into next/link.
 export async function generateStaticParams() {

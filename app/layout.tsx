@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DomainNotice } from "./components/domain-notice";
 import { SiteFooter } from "./components/site-footer";
 import { SiteNav } from "./components/site-nav";
 import { SITE_URL } from "./lib/site";
@@ -38,6 +39,7 @@ export default function RootLayout({
         <SiteNav />
         {children}
         <SiteFooter />
+        <DomainNotice />
       </body>
     </html>
   );

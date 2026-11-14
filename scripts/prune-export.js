@@ -3,8 +3,8 @@ const path = require("path");
 
 // Runs after `next build`. Cloudflare static assets take at most 20,000 files per deploy, and the static export writes
 // about 9 per car page: <token>.html, the <token>.txt RSC payload, and a <token>/ folder of __next.*.txt
-// segment-prefetch files. Car pages are only ever opened by a full page load (shared link, refresh, new tab, or
-// the plain <a> car links on the home and box pages), never by the client router, so only their .html is used.
+// segment-prefetch files. Car pages are only ever opened by a full page load (shared link, refresh, new tab),
+// never by the client router (in-site car links are plain <a> tags that open a modal), so only their .html is used.
 // /car's own segment files also live in out/car/ but are named __next.*.txt, so they are kept.
 const OUT_DIR = path.join(process.cwd(), "out");
 const CAR_DIR = path.join(OUT_DIR, "car");

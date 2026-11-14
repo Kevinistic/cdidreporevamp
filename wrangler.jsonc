@@ -1,0 +1,19 @@
+// Cloudflare Worker that serves the static export in out/ (built by `npm run build`) as static assets.
+// There is no Worker script: every request is a static file, which is free and doesn't count as a Worker request.
+// Workers Builds runs `npm run build`, then `npx wrangler deploy`, which uploads out/ using this file.
+{
+  // Must match the Worker's name in the Cloudflare dashboard, or Workers Builds refuses to deploy.
+  "name": "cdidrepo",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./out",
+    // Unknown paths (including unknown car tokens) get out/404.html with a 404 status.
+    "not_found_handling": "404-page"
+  },
+  // The root domain and www, attached as custom domains (Cloudflare creates their DNS records and certificates).
+  // A Redirect Rule in the cdidrepo.web.id zone sends www to the root.
+  "routes": [
+    { "pattern": "cdidrepo.web.id", "custom_domain": true },
+    { "pattern": "www.cdidrepo.web.id", "custom_domain": true }
+  ]
+}

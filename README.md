@@ -51,13 +51,13 @@ Run the fetch scripts again whenever you want fresh data locally. Without the JS
 
 ## Deploy
 
-The site is a static export hosted on Cloudflare Pages at <https://cdidrepo.web.id>. Pages builds from GitHub: `main` deploys to production, `staging` to `staging.cdidrepo.pages.dev`.
+The site is a static export served by the `cdidrepo` Cloudflare Worker as static assets at <https://cdidrepo.web.id>. `wrangler.jsonc` points the Worker at `out/` and attaches the domain. Workers Builds builds from GitHub: `main` deploys to production, other branches upload preview versions.
 
-| Setting | Value |
+| Setting (Worker → Settings → Build) | Value |
 | --- | --- |
 | Build command | `npm run build` |
-| Build output directory | `out` |
+| Deploy command | `npx wrangler deploy` |
 | Node version | from `.node-version` |
-| Environment variables | the ones above, for Production and Preview. `CAR_TOKEN_SECRET` must keep its old value or every shared car link breaks |
+| Build variables and secrets | the ones above. `CAR_TOKEN_SECRET` must keep its old value or every shared car link breaks. Runtime "Variables and Secrets" are not seen by the build |
 
-`scripts/prune-export.js` keeps the deploy under Pages' 20,000-file limit by deleting the car pages' client-navigation files, so car links must stay plain `<a>` tags. Cache headers for hashed assets are in `public/_headers`. To check a build locally, serve `out/` with any static server (`next start` doesn't work with a static export).
+`scripts/prune-export.js` keeps the deploy under the 20,000-file static assets limit by deleting the car pages' client-navigation files, so car links must stay plain `<a>` tags. Cache headers for hashed assets are in `public/_headers`. To check a build locally, serve `out/` with any static server (`next start` doesn't work with a static export).
